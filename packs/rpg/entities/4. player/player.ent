@@ -1,0 +1,155 @@
+id=player
+
+<iscript>
+		
+		`Players world variables
+		$day.fog.colour = rgb(28, 73, 140)
+		$water.fog.colour = rgb(12, 30, 37)
+		
+		`player object
+		$player.object = makebox(100, 150, 100)
+		set object collision $player.object, 1
+		set object visible $player.object, 1
+
+		
+		`stats
+		$player.alive = 1
+		$player.mhealth = 20
+		$player.health = 20
+		$player.mmana = 20
+		$player.mana = 20
+		
+		$player.speed = 7
+		$player.strength = 3
+		$player.agility = 2
+		$player.luck = 5
+		
+		`condition
+		$player.swimming = 0
+		$player.attacking = 0
+		$player.attackcountdown = 100
+		
+		$player.grounded = 1
+		$player.force.y = 0
+		
+		`positioning
+		move object up $player.object, 100
+		position camera object position x($player.object),50 + object position y($player.object),object position z($player.object)
+		rotate camera object angle x($player.object),object angle y($player.object),object angle z($player.object)
+</iscript>
+
+	
+
+<lscript>
+		
+		$old.y.pos = object position y($player.object)
+		
+		if keystate(17) = 1
+			move object $player.object, delta($player.speed)
+			if keystate(42) = 0
+				move object $player.object, delta($player.speed)
+			endif
+		else
+			if keystate(31) = 1
+				move object $player.object, delta(0-$player.speed)
+				if keystate(42) = 0
+					move object $player.object, delta(0-$player.speed)
+				endif
+			endif
+		endif
+		
+		if keystate(30) = 1
+			move object left $player.object, delta($player.speed/2)
+			if keystate(42) = 0
+				move object left $player.object, delta($player.speed/2)
+			endif
+		else
+			if keystate(32) = 1
+				move object right $player.object, delta($player.speed/2)
+				if keystate(42) = 0
+					move object right $player.object, delta($player.speed/2)
+				endif
+			endif
+		endif
+		
+		if $player.swimming = 0
+			position object $player.object, object position x($player.object), $old.y.pos, object position z($player.object)
+		endif
+		
+		if $player.grounded = 1
+			if keystate(57) = 1
+				$player.force.y = $player.speed + $player.strength + $player.agility
+			endif
+		endif
+		yrotate object $player.object, mousemovex() + object angle y($player.object)
+		xrotate object $player.object, mousemovey() + object angle x($player.object)
+		
+		`gravity and water/land effects
+		if camera position y() > $water.level + 10
+			position object $player.object,object position x($player.object),object position y($player.object) + $player.force.y,object position z($player.object)
+			if $player.swimming <> 0
+				$player.swimming = 0
+				color fog $day.fog.colour
+			endif
+		else
+			if camera position y() < $water.level + 2
+				position object $player.object,object position x($player.object),object position y($player.object) + 1,object position z($player.object)
+				if $player.swimming <> 1
+					$player.swimming = 1
+					color fog $water.fog.colour
+				endif
+			else
+				if $player.swimming <> 2
+					$player.swimming = 2
+					color fog $day.fog.colour
+				endif
+			endif
+		endif
+		
+		`runcollision $player.object
+		runxintersections $player.object
+		runzintersections $player.object
+		
+		if returnyintersections $player.object = 0
+			$player.grounded = 0
+			if $player.swimming = 0
+				if $player.force.y > -30
+					sub $player.force.y, delta(1)
+				endif
+			else
+				$player.force.y = delta(1)
+			endif
+		else
+			$player.grounded = 1
+			if $player.swimming = 0
+				$player.force.y = delta(0-1)
+			else
+				$player.force.y = delta(1)
+			endif
+		endif
+		
+		text 10, 10, $player.grounded
+		text 10, 20, $player.force.y
+		
+		`place camera with player
+		position camera object position x($player.object),50 + object position y($player.object),object position z($player.object)
+		rotate camera object angle x($player.object),object angle y($player.object),object angle z($player.object)
+		
+		
+		`attack
+		if mouseclick() = 1
+			if $player.attackcountdown = 0
+				$player.attacking = 1
+				$player.attackcountdown = 100 - $player.agility
+			else
+				$player.attacking = 0
+				sub $player.attackcountdown, delta(1)
+			endif
+		endif
+		
+
+</lscript>
+
+<escript>
+		delete object $player.object
+</escript>

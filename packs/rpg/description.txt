@@ -1,0 +1,3 @@
+This is just a test FPS pack for VGC.
+
+I really wouldn't use this as a template for a proper game as it uses lots of messy code and exists primarily for testing purposes.

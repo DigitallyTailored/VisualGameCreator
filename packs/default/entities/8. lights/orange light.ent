@@ -1,0 +1,15 @@
+id=light
+<iscript>
+		$Level.Light# = makelight(rgb(255,159,0), 1024)
+</iscript>
+	
+	
+<lscript>
+	
+	
+</lscript>
+
+
+<escript>
+		Delete Light $Level.Light#
+</escript>

@@ -1,0 +1,64 @@
+id=red grass forager
+<iscript>
+		$Creature.Object# = MakeBox(100, 130, 100)
+		set object collision $Creature.Object#, 1
+		move object up $Creature.Object#, 100
+		$Creature.MHealth# = 5
+		$Creature.Health# = 5
+		
+		$Creature.Speed# = 3
+		
+		$Creature.Dest.X# = object position x($Creature.Object#)
+		$Creature.Dest.Y# = object position y($Creature.Object#)
+		$Creature.Dest.Z# = object position z($Creature.Object#)
+</iscript>
+	
+	
+<lscript>
+	if PointingToPosition( $Creature.Object#, object position x($player.object), object position y($Creature.Object#), object position z($player.object), 75 ) = 1
+		if ObjectsLineClear($Creature.Object#, $player.object) = 1
+			$Creature.Dest.X# = object position x($player.object)
+			$Creature.Dest.Y# = object position y($Creature.Object#)
+			$Creature.Dest.Z# = object position z($player.object)
+		endif
+	endif
+	
+	if ObjectWithinRange( $Creature.Object#, $Creature.Dest.X#, $Creature.Dest.Y#, $Creature.Dest.Z#, 10 ) = 1
+		if ObjectsWithinRange( $Creature.Object#, $player.object, 10 ) = 1
+			$Creature.Dest.X# = object position x($player.object)
+			$Creature.Dest.Y# = object position y($Creature.Object#)
+			$Creature.Dest.Z# = object position z($player.object)
+			RotateObjectToPoint $Creature.Object#, $Creature.Dest.X#, object position y($Creature.Object#), $Creature.Dest.Z#, 5
+		else
+			$null1 = 0-500+rnd(1000)
+			$null2 = 0-500+rnd(1000)
+			if ObjectLineClear( $Creature.Object#, object position x($Creature.Object#)+$null1, object position y($Creature.Object#), object position z($Creature.Object#)+$null2 ) = 1
+				$Creature.Dest.X# = object position x($Creature.Object#) + $null1
+				$Creature.Dest.Y# = object position y($Creature.Object#)
+				$Creature.Dest.Z# = object position z($Creature.Object#) + $null2
+			endif
+		endif
+	else
+		RotateObjectToPoint $Creature.Object#, $Creature.Dest.X#, object position y($Creature.Object#), $Creature.Dest.Z#, 5
+		if PointingToPosition($Creature.Object#, $Creature.Dest.X#, object position y($Creature.Object#), $Creature.Dest.Z#, 30) = 1		
+			Move Object $Creature.Object#, $Creature.Speed#
+		endif
+	endif
+	
+	`Gravity and water/land effects
+		if object position y($Creature.Object#) > $Water.Level + 10
+			position object $Creature.Object#,object position x($Creature.Object#),object position y($Creature.Object#) - 7,object position z($Creature.Object#)
+		else
+			if object position y($Creature.Object#) < $Water.Level + 2
+				position object $Creature.Object#,object position x($Creature.Object#),object position y($Creature.Object#) + 1,object position z($Creature.Object#)
+			endif
+		endif
+	
+	RunCollision $Creature.Object#
+	
+</lscript>
+
+
+<escript>
+		Delete Object $Creature.Object#
+</escript>

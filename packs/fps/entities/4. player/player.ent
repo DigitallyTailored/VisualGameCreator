@@ -1,0 +1,220 @@
+<iscript>
+	
+	$player.object = makebox(100, 120, 100)
+	set object visible $player.object, 1
+	set object collision $player.object, 1
+	
+	$image.crosshair = loadImage("data\img\crosshair.png")
+	
+	`stats
+	$player.mhealth = 100
+	$player.health = 100
+	$player.speed = 7
+	$player.strength = 3
+	$player.agility = 2
+	
+	`states
+	$player.swimming = 0
+	
+	`physics
+	$player.grounded = 1
+	$player.force.y = 0
+
+
+	`position above ground
+	move object up $player.object, 100
+	`set camera to player position
+	position camera object position x($player.object),50 + object position y($player.object),object position z($player.object)
+	rotate camera object angle x($player.object),object angle y($player.object),object angle z($player.object)
+	
+	`prepare player for weapons and give some to start with
+	$gun.active = 0
+	$gun.object = 0
+	$gun.name = ""
+	$gun.sound = 0
+	
+	add_player_weapon("Pistol", 1, 3, 500, 30, loadobject("data\obj\weapons\pistol\pistol.x"), loadsound("data\obj\weapons\pistol\shoot.wav"))
+	add_player_weapon("MP5", 2, 2, 100, 90, loadobject("data\obj\weapons\mp5\mp5.x"), loadsound("data\obj\weapons\mp5\shoot.wav"))
+	
+</iscript>
+
+
+<lscript>
+	
+	text 20, 20 "1. Pistol     2. Machine gun"
+	
+	if $player.health > 0
+		
+		`check if we've been hit
+		$hit = getData("hit." + $player.object)
+		if $hit > 0
+			$player.health = $player.health - $hit
+			setData "hit." + $player.object, 0
+		endif
+		
+		`store position before movement for collision
+		$old.pos.x = object position x($player.object)
+		$old.pos.y = object position y($player.object)
+		$old.pos.z = object position z($player.object)
+		
+		`move player - WASD
+		if keystate(17) = 1
+			move object $player.object, delta($player.speed)
+			if keystate(42) = 0
+				move object $player.object, delta($player.speed)
+			endif
+		else
+			if keystate(31) = 1
+				move object $player.object, delta(0-$player.speed)
+				if keystate(42) = 0
+					move object $player.object, delta(0-$player.speed)
+				endif
+			endif
+		endif
+		
+		if keystate(30) = 1
+			move object left $player.object, delta($player.speed/2)
+			if keystate(42) = 0
+				move object left $player.object, delta($player.speed/2)
+			endif
+		else
+			if keystate(32) = 1
+				move object right $player.object, delta($player.speed/2)
+				if keystate(42) = 0
+					move object right $player.object, delta($player.speed/2)
+				endif
+			endif
+		endif
+		
+		`jump with spacekey if player is on ground
+		if $player.grounded = 1
+			if keystate(57) = 1
+				$player.force.y = $player.speed + $player.strength + $player.agility
+			endif
+		endif
+		
+		`rotate player with mouse
+		yrotate object $player.object, mousemovex() + object angle y($player.object)
+		xrotate object $player.object, mousemovey() + object angle x($player.object)
+		
+		`gravity and water/land effects
+		if camera position y() > $water.level + 10
+			position object $player.object,object position x($player.object),object position y($player.object) + $player.force.y,object position z($player.object)
+			if $player.swimming <> 0
+				$player.swimming = 0
+			endif
+		else
+			if camera position y() < $water.level + 2
+				position object $player.object,object position x($player.object),object position y($player.object) + 1,object position z($player.object)
+				if $player.swimming <> 1
+					$player.swimming = 1
+				endif
+			else
+				if $player.swimming <> 2
+					$player.swimming = 2
+				endif
+			endif
+		endif
+		
+		`run collision
+		
+		if returnYIntersections($player.object) < 0
+			$player.force.y = 0
+			$player.grounded = 1
+		else
+			$player.grounded = 0
+			$player.force.y = $player.force.y - delta(1)
+		endif
+		
+		position object $player.object, object position x($player.object), object position y($player.object) + $player.force.y, object position z($player.object)
+		
+		runspherecollision $player.object, $old.pos.x, $old.pos.y, $old.pos.z, 45
+		
+		`text 10, 30, "collision pos: " + Returnycollisionposition()
+		`text 10, 40, "collision slide: " + Returnycollisionslide()
+		`text 10, 50, "collision normal: " + Returnycollisionnormal()
+		
+		`position and rotate camera with player
+		position camera object position x($player.object),object position y($player.object) + 35,object position z($player.object)
+		rotate camera object angle x($player.object),object angle y($player.object),object angle z($player.object)
+		
+		`weapons
+		$skey = scancode() - 1
+		if $skey > 0
+			if $skey < 12
+				`a number key is being pushed, lets see if it's a gun
+				if getData("player.gun."+$skey+".name") <> ""
+					`this is a new gun
+					if $gun.object > 0
+						set object visible $gun.object, 0
+					endif
+					
+					`remember last guns ammo
+					if $gun.object > 0
+						setData "player.gun."+$gun.active+".ammo", $gun.ammo
+					endif
+					
+					$gun.active = $skey
+					$gun.object = getData("player.gun."+$skey+".object")
+					set object visible $gun.object, 1
+					$gun.name = getData("player.gun."+$skey+".name")
+					$gun.sound = getData("player.gun."+$skey+".sound")
+					$gun.ammo = getData("player.gun."+$skey+".ammo")
+					$gun.damage = getData("player.gun."+$skey+".damage")
+					$gun.reloadtime = getData("player.gun."+$skey+".reloadtime")
+					$gun.lastattacktime = getData("player.gun."+$skey+".lastattacktime")
+				endif
+			endif
+		endif
+		
+		if $gun.active > 0
+			`we have an active gun
+			text 35, 35, $gun.name + " - " + $gun.ammo
+			position object $gun.object, camera position x(), camera position y()-15, camera position z()
+			rotate object $gun.object, camera angle x(), camera angle y(), camera angle z()
+			move object $gun.object, 30
+			move object right $gun.object, 20
+			
+			`budget crosshair - need to add these commands
+			`text screen x()/2, screen y()/2, "x"
+			draw timage $image.crosshair, (screen x()/2)-16, (screen y()/2)-16
+			
+			`shoot!
+			if mouseclick() = 1
+				if $gun.ammo  > 0
+					if $gun.lastattacktime + $gun.reloadtime < timer()
+						$h = Objectundermouse()
+						if $h > 0
+							setData "hit." + $h, $gun.damage
+						endif
+						play sound $gun.sound
+						sub $gun.ammo, 1
+						$gun.lastattacktime = timer()
+					endif
+				endif
+			endif
+			
+		endif
+		
+		`HUD
+		`show health
+		draw box 59, screen y()-49, 11+$player.mhealth, screen y()-29, rgb(0,0,0), rgb(0,0,0), rgb(0,0,0), rgb(0,0,0)
+		draw box 60, screen y()-50, 10+$player.health, screen y()-28, rgb(25,204,201), rgb(25,204,201), rgb(163,226,179), rgb(163,226,179)
+		`text 60, screen y()-60, $player.health
+		position mouse screen x()/2, screen y()/2
+		
+	else
+		`player is dead
+		text screen x()/2, screen y()/2, "You have died."
+		sleep 3000
+		end
+	endif
+	
+	
+	
+		
+</lscript>
+
+<escript>
+	delete object $player.object
+</escript>

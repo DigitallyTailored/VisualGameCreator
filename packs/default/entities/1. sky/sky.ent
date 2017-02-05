@@ -1,0 +1,22 @@
+id=sky
+
+<iscript>
+$sky.object = makesphere(0 - 70000)
+$sky.texture = loadimage("data\img\sky.jpg")
+
+set object texture $sky.object, $sky.texture
+set object ambient $sky.object, 0
+set object specular $sky.object, 0
+set object fog $sky.object, 0
+xrotate object $sky.object, 180
+</iscript>
+
+<lscript>
+
+position object $sky.object, camera position x(), camera position y(), camera position z()
+
+</lscript>
+
+<escript>
+delete object $sky.object
+</escript>

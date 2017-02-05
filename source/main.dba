@@ -1,0 +1,665 @@
+gosub setup
+
+newScene()
+if path exist("packs\current\") = 0
+	make directory "packs\current\"
+endif
+set dir Main_Dir$ + "\packs\current"
+
+sync : sync
+updateDelta()
+
+
+//main loop
+do
+	updateDelta()
+	getevent
+	
+	runMenu()
+	
+	//load entities
+	if eventType()=LEFTBUTTON_DOWN or eventType()=KEYDOWN
+		if gadgetundermouse() = tv_main
+			url$ = getURL(tv_main,0)
+			if lower$(right$(url$, 4)) = ".ent"
+				setStatusText status_bar, 1, "Loading '" + url$ + "'..."
+				//is an ent file, load the ent
+				gadget_file(scr_ed, Main_Dir$ + "\packs\current\entities\"+url$)
+				setStatusText status_bar, 1, "Ready to use '" + url$ + "'."
+				setStatusText scr_ed_w, 1, "Script Editor - Ready to use '" + url$ + "'."
+				activategadget mwindow
+			else
+				//clear url$
+				url$ = ""
+				setStatusText scr_ed_w, 1, "Script Editor"
+			endif
+		endif
+	endif
+	remstart
+	//run syntax highlighting
+	if activegadget() = scr_ed
+		g_text$ = getgadgettext(scr_ed)
+		g_text$ = remove_chr(g_text$, 10)
+		
+		if right$(left$(g_text$, getselstart(scr_ed)),1) = " "
+			if newspace = 0
+				HighlightRichEdit(scr_ed, 0)
+				newspace = 1
+			endif
+		else
+			newspace = 0
+		endif
+		
+		if right$(left$(g_text$, getselstart(scr_ed)),1) = chr$(13)
+			if newreturn = 0
+				HighlightRichEdit(scr_ed, 2)
+				newreturn = 1
+			endif
+		else
+			newreturn = 0
+		endif
+	endif
+	remend
+	
+	//If the main 3d window is under the mouse 
+	if gadgetundermouse() = mwindow
+		
+		MouseControl(delta(30))
+		
+		//draw the box
+		if url$ <> ""
+			//box mousex()-5, mousey()-5, mousex()+5, mousey()+5, rgb(0,0,0), rgb(0,0,0), rgb(0,0,0), rgb(0,0,0)
+			//box mousex()-4, mousey()-4, mousex()+4, mousey()+4, rgb(255,255,255), rgb(255,255,255), rgb(255,255,255), rgb(255,255,255)
+			paste image entityIcon, mousex(), mousey(), 1
+		endif
+		
+		if mouseclick() = 1
+			
+			if url$ <> ""
+				//entity to place
+				//remember if we're in runtime
+				toolStatus = getToolBarButtonState (toolbar, 4)
+				
+				setStatusText status_bar, 1, "Placing '" + url$ + "'..."
+				//save the ent data and run the iscript
+				//get position to place entity
+				SET CURRENT CAMERA 0
+				null = pick object(mousex(), mousey(), 1, oo_top_object)
+				if null > 0
+					Default_X# = camera position x()+get pick vector x()
+					Default_Y# = camera position y()+get pick vector y()
+					Default_Z# = camera position z()+get pick vector z()
+					//message str$(Default_X#) + "|" + str$(Default_Y#) + "|" + str$(Default_Z#)
+				else
+					Default_X# = 0
+					Default_Y# = 0
+					Default_Z# = 0
+				endif
+				
+				add_scg(CutParse(1,"\",url$), getgadgettext(scr_ed))
+				setStatusText status_bar, 1, "Placed '" + url$ + "' at X:"+str$(Default_X#)+",  Y:"+str$(Default_Y#)+",  Z:"+str$(Default_Z#)
+				//compile loop script
+				compile_runtime()
+				sync
+				//repeat
+				//until mouseclick() = 0
+				if controlkey()
+					setStatusText status_bar, 1, "Ready to use '" + url$ + "'."
+				else
+					url$ = ""
+				endif
+				
+				settoolbarbuttonstate toolbar, 4, toolStatus
+			else
+				
+				//not running any code
+				if getToolBarButtonState (toolbar, 4) = 0
+					
+					//no entity to place, select an object
+					null = pick object(mousex(), mousey(), 1, oo_top_object)
+					
+					setStatusText status_bar, 1, "clicked:" + str$(null) + " - " + str$(oo_top_object)
+					if null > 0
+						ent = get_scg_num(null)
+						if ent_sel(ent) = 0
+							if controlkey() = 0
+								deselect_ent_all()
+							endif
+							select_ent(ent)
+						else
+							if controlkey() = 0
+								deselect_ent_all()
+							else
+								deselect_ent(ent)
+							endif
+						endif
+					else
+						if controlkey() = 0
+							deselect_ent_all()
+						endif
+					endif
+					
+				endif
+			
+				if getToolBarButtonState (toolbar, 4) = 0
+					//wait till the mouse is back up
+					repeat
+					until mouseclick() = 0
+				endif
+				
+			endif
+		endif
+		
+		//delete key
+		if keystate(211)
+			if url$ = ""
+				//delete selected objects
+				for a = 1 to sel_ent_cnt
+					delete_scg(sel_ent(a))
+				next a
+				//compile loop script
+				compile_runtime()
+			else
+				//clear entity data
+				url$ = ""
+				setStatusText status_bar, 1, ""
+			endif
+			
+			//wait till the delete key is back up
+			repeat
+			until keystate(211) = 0
+		endif
+			
+	endif
+
+	select eventtype()
+		case WINDOW_CLOSE
+			if eventsource() = mwindow
+				//check if saved and exit
+				end
+			endif
+		endcase
+	endselect
+	
+	//run/stop when pressing F5
+	if keystate(63)
+		settoolbarbuttonstate toolbar, 4, 1
+	endif
+	if keystate(88) or escapekey()
+		settoolbarbuttonstate toolbar, 4, 0
+	endif
+	
+	if getToolBarButtonState (toolbar, 4) = 1
+		outAGE = 0
+		if mousehidden = 1
+			hide mouse
+		endif
+		//message "entering script loop"
+		repeat
+			inc Current_Line(Code_Mode)
+			Define_Line()
+		until sync_run = 1
+		//message "leaving script loop"
+		sync_run = 0
+	else
+		outAGE = 1
+		if mousehidden = 1
+			show mouse
+		endif
+		if mouseclick() = 0
+			null=mousemovex()
+			null=mousemovey()
+		endif
+		sync
+	endif
+
+remstart
+//debug
+if spacekey()
+	
+	Save_Compiled_Code("cscript.txt")
+	repeat
+	until spacekey() = 0
+endif
+remend
+	//decrease CPU usage
+	DoSleep(5)
+	
+loop
+
+//scene management
+function newScene()
+	//all ents
+	scg_cnt = 0
+	dim scg(scg_cnt) as script_types
+	
+	//all objects
+	for a = 1 to scg_obj_cnt
+		DeleteObject(scg_obj(a).obj)
+		scg_obj(a).ent = 0
+		scg_obj(a).obj = 0
+	next a
+	
+	//selection
+	sel_ent_cnt = 0
+	dim sel_ent(sel_ent_cnt)
+	
+	//held script
+	for b = 0 to 3
+		Script_File_Lin(b) = 0
+		Current_Line(b) = 0
+	next b
+	dim Script_File$(1, 3)
+	Script_File_Lin = 0
+	Code_Mode = MScript
+	
+	//functions
+	fun_c = 0
+	fun_l_c = 0
+	
+	dim function_name(fun_c) as string
+	
+	dim function_lines(fun_c)
+	dim function_code(fun_c, fun_l_c) as string
+	
+	global fun_v_c
+	dim function_vars_c(fun_c)
+	dim function_vars(fun_c, fun_v_c) as string
+	
+	//compile loop script
+compile_main_script()
+
+//scan for additional functions
+set dir Main_Dir$
+if path exist("packs\current\data\functions")	
+	set dir "packs\current\data\functions"
+	find first
+	repeat
+		if GET FILE TYPE() = 0
+			//a file
+			if lower$(right$(get file name$(), 7)) = ".script"
+				open to read 2, get file name$()
+				repeat
+					read string 2, New_Line$
+					Scan_Line(New_Line$)
+				until file end(2)
+				close file 2
+			endif
+		endif
+		find next
+	until GET FILE TYPE() = -1
+endif
+set dir Main_Dir$
+
+//define the end of the file for a clean exit
+Add_Code_Line("end")
+
+//work out the functions and stuffs
+compile_prerun()
+
+compile_runtime()
+
+//reset camera
+position camera 0,1000,0
+point camera 500, 0, 500
+
+endfunction
+
+//script storage
+
+function add_scg(s_type as string, script as string)
+	inc scg_cnt
+	dim scg(scg_cnt) as script_types
+	if s_type = "sky" or s_type = "ground" or s_type = "player"
+		for a = 1 to scg_cnt
+			if scg(a).s_type = s_type
+				stored = 1
+				delete_scg(a)
+				
+				scg(a).script = script
+				scg(a).x = Default_X#
+				scg(a).y = Default_Y#
+				scg(a).z = Default_Z#
+				cur_cnt = a
+				exit
+			endif
+		next a
+	endif
+	if stored = 0
+		scg(scg_cnt).s_type = s_type
+		scg(scg_cnt).script = script
+		scg(scg_cnt).x = Default_X#
+		scg(scg_cnt).y = Default_Y#
+		scg(scg_cnt).z = Default_Z#
+		cur_cnt = scg_cnt
+	endif
+	
+	
+	//grab and run iscript
+	Code_Mode = IScript
+	for a = 1 to Script_File_Lin
+		Script_File$(a, Code_Mode) = ""
+	next a
+	Script_File_Lin(Code_Mode) = 0
+	Current_Line(Code_Mode) = 0
+	
+	entityCount = cur_cnt
+	str_len = len(scg(cur_cnt).script)
+	repeat
+		inc caret
+		mid_str$ = mid$(scg(cur_cnt).script, caret)
+		if mid_str$ = chr$(13)
+			if New_Line$ = "</iscript>"
+				exit
+			endif
+			if ready = 1
+				Scan_Line(New_Line$)
+			endif
+			if New_Line$ = "<iscript>"
+				ready = 1
+			endif
+			New_Line$ = ""
+		else
+			if mid_str$ = chr$(10) = 0
+				New_Line$ = New_Line$ + mid_str$
+			endif
+		endif
+	until caret = str_len
+
+	add_code_line("end")
+	
+	//work out the functions and stuffs
+	compile_prerun()
+	
+	Current_Line(Code_Mode) = 0
+	repeat
+		inc Current_Line(Code_Mode)
+		Define_Line()
+	until script_run = 1
+	script_run = 0
+	
+endfunction
+
+function delete_scg(ent)
+	scg(ent).s_type = ""
+	scg(ent).script = ""
+	scg(ent).x = 0
+	scg(ent).y = 0
+	scg(ent).z = 0
+	
+	//delete all associated objects
+	for a = 1 to scg_obj_cnt
+		if scg_obj(a).ent = ent
+			DeleteObject(scg_obj(a).obj)
+			scg_obj(a).ent = 0
+			scg_obj(a).obj = 0
+		endif
+	next a
+endfunction
+
+function add_scg_object(onum as integer, enum as integer)
+	inc scg_obj_cnt
+	dim scg_obj(scg_obj_cnt) as scg_objf
+	scg_obj(scg_obj_cnt).obj = onum
+	scg_obj(scg_obj_cnt).ent = enum
+endfunction
+
+function delete_scg_object(onum as integer)
+	for a = 1 to scg_obj_cnt
+		if scg_obj(a).obj = onum
+			scg_obj(a).ent = 0
+			scg_obj(a).obj = 0
+		endif
+	next a
+endfunction
+
+function get_scg_num(onum as integer)
+	for a = 1 to scg_obj_cnt
+		if scg_obj(a).obj = onum
+			null = scg_obj(a).ent
+			exitfunction null
+		endif
+	next a
+endfunction null
+
+//entity selection
+function select_ent(null)
+	//add to selection var
+	inc sel_ent_cnt
+	dim sel_ent(sel_ent_cnt)
+	sel_ent(sel_ent_cnt) = null
+	//highlight entities objects
+	for a = 1 to scg_obj_cnt
+		if scg_obj(a).ent = null
+			set object wireframe scg_obj(a).obj, 1
+		endif
+	next a
+endfunction
+
+function deselect_ent(null)
+	//take off all highlighted objects
+	for a = 1 to sel_ent_cnt
+		if sel_ent(a) = null
+			for b = 1 to scg_obj_cnt
+				if scg_obj(b).ent = sel_ent(a)
+					set object wireframe scg_obj(b).obj, 0
+				endif
+				//exit
+			next b
+			sel_ent(a) = 0
+			exitfunction
+		endif
+	next a
+endfunction
+
+function deselect_ent_all()
+	//take off all highlighted objects
+	for a = 1 to sel_ent_cnt
+		for b = 1 to scg_obj_cnt
+			if scg_obj(b).ent = sel_ent(a)
+				set object wireframe scg_obj(b).obj, 0
+			endif
+		next b
+	next a
+	
+	//reset selection var
+	sel_ent_cnt = 0
+	dim sel_ent(sel_ent_cnt)
+endfunction
+
+function ent_sel(ent)
+	//message "checking ent sel..."
+	for a = 1 to sel_ent_cnt
+		//message str$(sel_ent(a)) + " found | " + str$(ent) + " clicked"
+		if sel_ent(a) = ent
+			exitfunction 1
+		endif
+	next a
+endfunction 0
+
+//gadget control
+function file_string(file as string)
+	str as string
+	str_t as string
+	if file exist(file)
+		f = freefile()
+		open to read f, file
+			read string f, str_t
+			read string f, str
+			repeat
+				str_t = str_t + chr$(13) + chr$(10) + str
+				read string f, str
+			until file end(f)
+		close file f
+	endif
+endfunction str_t
+
+
+function PopulateTreeView(TheTree,folder as string, parent)
+	
+	if path exist(folder)
+		
+		local name as string=""
+		set dir folder
+		perform checklist for files
+		count=checklist quantity()
+	
+		for i=1 to count
+	      name=checklist string$(i)
+	      if (name <> ".") and (name <> "..")
+	
+	         isFolder=checklist value a(i)
+	
+	         if (right$(name,4)=".ent") or (right$(name,4)=".ENT")
+	            tmp=addTreeViewItem(TheTree,parent,2,name)
+	         endif
+	
+	         if isFolder=1
+	            
+	            tmp=addTreeViewItem(TheTree,parent,1,name)
+	            
+	            folder=get dir$()
+	            populateTreeView(TheTree,get dir$()+"\"+name,tmp)
+	
+	         	empty checklist
+	
+	            set dir folder
+	            perform checklist for files
+	
+	         endif
+	      endif
+		next i
+		
+		set dir applicationDirectory
+	endif
+endfunction
+
+function getURL(TheTree,item)
+
+   local url as string
+   local name as string=""
+   local slashChar as string="\"
+
+   if (item=0)
+      item=selectedTreeViewItem(TheTree)
+   endif
+
+   name=getTreeViewItemText(TheTree,item)
+
+   repeat
+      url=getTreeViewItemText(TheTree,item)+slashChar+url
+      item=getTreeViewParent(TheTree,item)
+   until item=0
+
+		CharNumber=len(url)
+      Newurl$=left$(url,CharNumber-1)
+
+      url=Newurl$
+
+
+endfunction url
+
+function gadget_file(hand as integer, file as string)
+	str as string
+	str_t as string
+	if file exist(file)
+		f = freefile()
+		open to read f, file
+			read string f, str_t
+			repeat
+				read string f, str
+				str_t = str_t + chr$(13) + chr$(10) + str
+			until file end(f)
+		close file f
+		setgadgettext hand, str_t
+		//HighlightRichEdit(hand, 1)
+	endif
+endfunction
+
+//compile main script
+function compile_main_script()
+	Code_Mode = MScript
+		for a = 1 to Script_File_Lin
+			Script_File$(a, Code_Mode) = ""
+		next a
+		Script_File_Lin(Code_Mode) = 0
+		Current_Line(Code_Mode) = 0
+		if file exist(Main_Dir$ + "\packs\current\main.script")
+			open to read 1, Main_Dir$ + "\packs\current\main.script"
+		else
+			open to read 1, Main_Dir$ + "\system\main.script"
+		endif
+			repeat
+				read string 1, new_line$
+				Scan_Line(new_line$)
+			until file end(1)
+		close file 1
+		
+		Code_Mode = MScript
+		Current_Line(Code_Mode) = 0
+endfunction
+
+//compile runtime
+function compile_runtime()
+		
+		Code_Mode = LScript
+		for a = 1 to Script_File_Lin
+			Script_File$(a, Code_Mode) = ""
+		next a
+		Script_File_Lin(Code_Mode) = 0
+		Current_Line(Code_Mode) = 0
+		
+		
+		for a = 1 to scg_cnt
+			if scg(a).script <> ""
+				entityCount = a
+				ready = 0
+				str_len = len(scg(a).script)
+				caret = 0
+				repeat
+					inc caret
+					mid_str$ = mid$(scg(a).script, caret)
+					if mid_str$ = chr$(13)
+						if New_Line$ = "</lscript>"
+							exit
+						endif
+						if ready = 1
+							Scan_Line(New_Line$)
+						endif
+						if New_Line$ = "<lscript>"
+							ready = 1
+						endif
+						New_Line$ = ""
+					else
+						if mid_str$ = chr$(10) = 0
+							New_Line$ = New_Line$ + mid_str$
+						endif
+					endif
+				until caret = str_len
+			endif
+		next a
+		add_code_line("runmscript")
+		Current_Line(Code_Mode) = 0
+		
+		//work out the functions and stuffs
+		compile_prerun()
+
+		Code_Mode = MScript
+		Current_Line(Code_Mode) = 0
+endfunction
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,373 @@
+setup:
+
+set display mode screen width(), screen height(), 32
+backdrop on
+color backdrop rgb(155,155,155)
+sync on
+sync rate 60
+autocam off
+set camera range 10, 100000
+disable escapekey
+
+//lighting
+//change ambient light
+set ambient light 0
+//color ambient light rgb(255,140,0)
+color ambient light rgb(135,206,250)
+
+//main light
+make light 7
+position light 7, 25000, 50000, 25000
+set light range 7, 10000
+color light 7, rgb(255,255,255)
+
+SET NORMALIZATION On
+
+
+//editor images
+entityIcon = loadimageA("editor-data\entity.png")
+
+
+`reset rnd seed value
+randomize timer()
+`Prepare Delta movement
+global deltaLoopTime : Global deltaLastTime : updateDelta()
+
+//changes how files are loaded
+global editing : editing = 1
+//outside of age engine, certain commands are disabled (camera, delta)
+global outAGE : outAGE = 1
+
+`Prepare the variable slots
+global variableCount : variableCount = 0
+dim variableName(variableCount) as string
+dim variableNumber(variableCount) as integer
+dim variableData(variableCount) as string
+
+`prepare the array slots
+global arrayCount : arrayCount = 0
+
+dim arrayListName(arrayCount) as string
+dim arrayListSize(arrayCount) as integer
+dim arrayListIndex(arrayCount) as integer
+dim arrayListEnd(arrayCount) as integer
+
+global dataCount : dataCount = 0
+dim arrayName(dataCount) as string
+dim arrayData(dataCount) as string
+
+`prepare data slots
+global datcnt
+dim datname(datcnt) as string
+dim datentry(datcnt) as string
+
+`internal parser variables
+Global bracketCount : bracketCount = 0
+Global commandCount : commandCount = 0
+
+`Code Modes MScript, IScript, LScript, EScript
+Global Code_Mode
+#Constant MScript 0
+#Constant IScript 1
+#Constant LScript 2
+#Constant EScript 3
+`Number for entity variables.
+Global entityNumber
+`Set the code mode to the Main Script, even though it already is
+Code_Mode = MScript
+
+`Main script storage
+global Script_File_Lin : Script_File_Lin = 0
+dim Script_File$(0, 3)
+dim Script_File_Lin(3)
+dim Current_Line(3)
+
+`function variables
+`function vars
+global fun_c
+global fun_l_c
+
+dim function_name(fun_c) as string
+
+dim function_lines(fun_c)
+dim function_code(fun_c, fun_l_c) as string
+
+global fun_v_c
+dim function_vars_c(fun_c)
+dim function_vars(fun_c, fun_v_c) as string
+
+global in_function_rslt as string
+global in_function_cnt as integer
+global returning_function_data as integer
+			
+
+`store loaded master objects
+global c_obj_master_c as integer
+dim c_obj_master_f(c_obj_master_c) as string
+dim c_obj_master_n(c_obj_master_c) as integer
+
+`AGE specific setup
+
+`AGE Level Objects
+type objectDataValues
+	X as float
+	Y as float
+	Z as float
+	Xa as float
+	Ya as float
+	Za as float
+	Object as integer
+	Size as float
+	ScaleX as integer
+	ScaleY as integer
+	ScaleZ as integer
+	Collision as integer
+	Transparency as integer
+	Ghost as integer
+	Fade as integer
+	Animate as integer
+	Billboarding as integer
+	Billboardon as integer
+	clone as integer
+	id as string
+	detail as string
+	fpath as string
+endtype
+
+Global highestObjectNumber : highestObjectNumber = 0
+Dim sceneObject(highestObjectNumber) as objectDataValues
+
+`Holds the the last object number
+global oo_top_object : oo_top_object = 0
+
+dim oo_c_obj_master_f(oo_c_obj_master_c) as string
+dim oo_c_obj_master_n(oo_c_obj_master_c) as integer
+
+Global Default_X#
+Global Default_Y#
+Global Default_Z#
+Global Default_Xa#
+Global Default_Ya#
+Global Default_Za#
+
+`Prepare light variables
+global light_count
+dim light_range(light_count) as float
+dim light_colour(light_count)
+dim light_position(light_count, 3) as float
+global active_lights_count : active_lights_count = 3
+dim active_lights(active_lights_count)
+
+if active_lights_count > 0
+	for a = 1 to active_lights_count
+		make light a
+		set light range a, 0
+		color light a, 0
+	next a
+endif
+
+`DD and BB settings
+global drawDistance : drawDistance = 20
+global BBa# : BBa# = 5
+global BBb# : BBb# = 81
+
+`text settings
+set text font "arial"
+set text size 12
+set text transparent
+	`used within New_ink(colour)
+	Global Current_ink
+	Global Original_ink
+New_ink(rgb(255,255,255))
+
+
+Global applicationDirectory as string : applicationDirectory = get dir$()
+Global Main_Dir$ as string : Main_Dir$ = applicationDirectory
+global currentSceneName as string : currentSceneName = ""
+global sceneToLoad as string
+global mediaDirectory as string
+`net vars
+global net_message_type : net_message_type = 0
+global safe_mode : safe_mode = 0
+
+	`mediaDirectory = fsr("prefab dir","main.agm")
+	mediaDirectory = Main_Dir$
+	`set dir mediaDirectory : mediaDirectory = get dir$() : Set dir Main_Dir$
+	`Script_File$ = fsr("script file","main.agm")
+	Script_File$ = "main.script"
+	
+`load gui
+
+
+`prepare one set script type holders
+type script_types
+	s_type as string
+	script as string
+	i_script as string
+	e_script as string
+
+	x as float
+	y as float
+	z as float
+	xa as float
+	ya as float
+	za as float
+endtype
+global scg_cnt as integer
+global cur_cnt as integer
+dim scg(scg_cnt) as script_types
+
+`prepare object entity placement storage
+type scg_objf
+	ent as integer
+	obj as integer
+endtype
+
+global scg_obj_cnt
+dim scg_obj(scg_obj_cnt) as scg_objf
+
+`prepare entity selection
+global sel_ent_cnt
+dim sel_ent(sel_ent_cnt)
+
+`prepare script exit variable
+global script_run
+global sync_run
+global mousehidden
+
+`load gui
+startBlue "CC","5f3a"
+
+mwindow = createGadgetFromWindow(mainwindow())
+
+`menu
+	type menus
+		main as integer
+		file as integer
+		edit as integer
+		compile as integer
+	endtype
+	global menu as menus
+	
+	menu.main = createmenu(mwindow)
+	addmenuitem menu.main, "File", 1
+	menu.file = createSubMenu(menu.main, 1)
+	addmenuitem menu.file, "New", 2
+	addmenuitem menu.file, "Open...", 3
+	addmenuitem menu.file, "Save", 4
+	addmenuitem menu.file, "Save as...", 5
+	addmenuitem menu.file, "Close", 6
+	
+	addmenuitem menu.main, "Edit", 26
+	menu.edit = createSubMenu(menu.main, 26)
+	addmenuitem menu.edit, "Reset Camera", 27
+	
+	addmenuitem menu.main, "Compile", 101
+	menu.compile = createSubMenu(menu.main, 101)
+	addmenuitem menu.compile, "Make Final", 110
+	
+`toolbar
+	global toolbar : toolbar = createtoolbar(mwindow)
+	addStandardToolbarButtons toolbar
+	addToolbarButton toolbar, TOOLBAR_NEW, 0
+	addToolbarButton toolbar, TOOLBAR_OPEN, 0
+	addToolbarButton toolbar, TOOLBAR_SAVE, 0
+	addToolbarsplitter toolbar
+	addToolbarButton toolbar, "editor-data\run.bmp", 1,"Run!"
+	//disable runtime selection
+	//addToolbarButton toolbar, TOOLBAR_NEW, 0
+	
+	setgadgetvisible toolbar, 0
+	
+`status bar
+	global status_bar
+	status_bar = createstatusbar(mwindow)
+	addStatusPanel status_bar, 1024
+	
+`entity treeview
+	global tv_win : tv_win = createwindow(gadgetx(mwindow)+10, gadgety(mwindow)+80, 150, 300, "Entity selector", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
+	global tv_main : tv_main = createtreeview(0,0,150,screen height(), tv_win)
+ 	setgadgetalign tv_main, ALIGN_ALL
+	`search entities
+	`if file exist("packs\current\entities")
+		PopulateTreeView(tv_main,"packs\current\entities", 0)
+	`endif
+
+`script editor
+//global scr_ed_w : scr_ed_w = createwindow(gadgetx(mwindow)+gadgetwidth(mwindow)-300, gadgety(mwindow)+gadgetheight(mwindow)-150, 295, 145, "Entity Editor", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
+global scr_ed_w : scr_ed_w = createwindow(gadgetx(mwindow)+600, gadgety(mwindow)+80, 200, 150, "Entity Editor", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
+
+global scr_ed : scr_ed = createrichedit(0,0,gadgetwidth(scr_ed_w), gadgetheight(scr_ed_w), scr_ed_w) : setgadgetalign scr_ed, ALIGN_ALL
+
+`prepare keywords
+	type keyword_fields
+		words as string
+		colour as integer
+	endtype
+	global key_count
+	dim key(key_count) as keyword_fields
+		
+	global newreturn
+	global newspace
+	
+	`grab the keywords
+	open to read 1, "editor-data\keywords.txt"
+	repeat
+		read string 1, txt$
+		if txt$ <> ""
+			add_keyword(txt$,0)
+		endif
+	until file end(1)
+	close file 1
+	
+	global script_default_font : script_default_font = createfont("arial", 10, 0, 0, 0)
+	global script_keyword_font : script_keyword_font = createfont("arial", 10, 1, 0, 0)
+		
+	global script_background as dword : script_background=rgb(155,155,155)
+
+
+
+
+`pack selector
+type packsfields
+	win as integer
+	apframe as integer
+	spframe as integer
+	addbtn as integer
+	rembtn as integer
+	okbtn as integer
+	cnlbtn as integer
+	aplist as integer
+	splist as integer
+	apdesc as integer
+endtype
+
+global packs as packsfields
+	
+	packs.win = createwindow(100,100,640,470,"Pack Selector", WINDOW_FIXED, WINDOW_TOOLWINDOW, 0, 0)
+    setgadgetvisible packs.win, 0
+	packs.apframe=createFrame(5,5,315,400,"Available packs",packs.win)
+    packs.spframe=createFrame(420,5,205,400,"Selected packs",packs.win)
+    packs.addbtn=createButton(330,10,80,25,"Add >>",0,packs.win)
+    packs.rembtn=createButton(330,45,80,25,"Remove",0,packs.win)
+    packs.okbtn=createButton(550,415,75,25,"OK",0,packs.win)
+    `packs.cnlbtn=createButton(5,415,75,25,"Cancel",0,packs.win)
+    
+    packs.aplist=createListView(4,19,305,320,packs.apframe)
+    packs.splist=createListView(4,19,195,375,packs.spframe)
+    
+    
+    
+    packs.apdesc=createEdit(4,344,305,50,0,packs.apframe)
+    setGadgetEnabled packs.apdesc,0
+
+	packimagelist = createImageList(32, 32)
+	addImageListItem packimagelist, "editor-data\pack.bmp"
+	setListViewImageList packs.aplist, packimagelist, 0
+	setListViewImageList packs.splist, packimagelist, 0
+	
+	`addlistviewitem packs.aplist, "default", 0
+	`addlistviewitem packs.aplist, "blah", 0
+	`addlistviewitem packs.aplist, "3D", 0
+
+return

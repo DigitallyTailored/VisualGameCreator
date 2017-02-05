@@ -1,0 +1,145 @@
+---Math
+Add VAR, INT/FLOAT : Will add the given int/float value to the given variable.
+Sub VAR, INT/FLOAT : Will subtract the given int/float value from the given variable.
+
+
+---Array commands
+Dim array_name, arrary_size : will create an array or resize a currently existing array.
+Undim array_name : will erase the given array and all of its contained data from memory.
+@array_name, array_index : Can be used in a similar way to a vairable in the way that it will either return the stored data or, if used first, set the stored data of the given index in the given array.
+
+---Variable commands
+set_dat STRING, STRING : Will set a variable of the given name with the given data.  Use get_dat( STRING ) to return the data.
+save_dat( STRING ) : Will save all data to the given filename.
+load_dat( STRING ) : Will load all data from the given filename.
+
+---System
+Do...loop : Code within do and loop will be run repeatedly, until the loop is exited.
+For $VAR = INT to INT...Next $VAR : This works like an ordinary loop, only every loop the given variable which is initially set to the first INT given will be incremented by 1. When the variable reaches the second INT given, the loop will exit when it gets to Next.
+Exit : This will exit the current loop.
+End : This will immediately end the program.
+If...Endif : Will execute the script within if the given if statement is true. An Else condition can be placed between If and Endif to run a script if the condition is false.
+Message INT/FLOAT/STRING : Will dispay the given message in the form of a windows 'OK' dialog box. Handy for debugging.
+Runiscript : Will run the initial script for entities within the current AGM level.
+Runlscript : Will run the loop script for entities within the current AGM level.
+Runescript : Will run the end script for entities within the current AGM level.
+Updatedelta : Will update the delta value for the Delta() command.
+Sleep INT : Will make the program sleep for the given number of seconds/1000.  Using this command is a great way to reduce cpu usage, even if the sleep is set to just 1 every loop.
+
+--GUI
+GUIDelete INT : Will delete the given GUI function.
+GUISetText INT, STRING : Will set the given GUI funtions text to the given text.
+GUISetX INT, INT : Will set the position of the given gadget on the X axis to the given amount.
+GUISetY INT, INT : Will set the position of the given gadget on the Y axis to the given amount.
+GUISetXSize INT, INT : Will set the size of the given gadget on the X axis by the given amount.
+GUISetYSize INT, INT : Will set the size of the given gadget on the Y axis by the given amount.
+
+--Screen
+Set Screen $X, $Y, $Depth, $mode : This will set the display options for the AGE engine.  $X is the width of the window or screen.  $Y is height for the window or screen.  $Depth sets the colour depth for the engine - usually 32 as this allows varying levels of transparency.  A $mode setting of one will use a window at the given $X $Y size.  A $mode setting of 1 will maximize the window with those settings, while a setting of 0 will make the engine run in fullsreen mode using the given $X and $Y as the resolution.  It is reccomended that the reolution and screen type is set before anything else takes place in the engine.
+
+
+---File
+Write file INT, INT/FLOAT/STRING : This will write to the specified file the specified data.
+Delete file String : This will delete the specified file.
+
+---3D
+Sync on : This will turn off automatic sync.
+sync off : This will turn off user set syncs.
+sync rate INT : This will define the maximum sync rate.
+Sync : If sync has been activated via sync on, this will update the screen.
+Set agm load distance FLOAT : This will set the AGM load distance. This is at 25 by default.
+Set BBa FLOAT : This will set the distance that an object will be replaced by a billboard by multiplying the number given by that of the objects size.
+Set BBb FLOAT : This will set the distance that a billboard will be deleted by multiplying the number given by that of the objects size.
+Agm distance load : This will gradually load the objects of an AGM level based on their size and distance from the camera.
+Load agm level STRING : This will load the given AGM level. If a level is currently open then it will be closed automatically.
+
+--Camera
+Mcc INT/FLOAT : This is a premade mouse to camera control function.
+Position camera FLOAT, FLOAT, FLOAT : This will position the camera at the given xyz coordinates.
+Move camera FLOAT : This will move the camera forward or backwards.
+Xrotate camera FLOAT : This will rotate the camera by the value on the x axis.
+Yrotate camera FLOAT : This will rotate the camera by the value on the y axis.
+Zrotate camera FLOAT : This will rotate the camera by the value on the z axis.
+Turn camera left INT, FLOAT : This will rotate the camera left by the given value.
+Turn camera right INT, FLOAT : This will rotate the camera right by the given value.
+Rotate camera FLOAT, FLOAT, FLOAT : This will rotate the camera by the given xyz angles.
+Point camera FLOAT, FLOAT, FLOAT : This will point the camera towards the given xyz position.
+Set camera range FLOAT, FLOAT : This will set the cameras near far range of visibility.
+Backdrop on : This will activate the 3D backdrop.
+Backdrop off : This will deactivate the 3D backdrop.
+Color backdrop INT : This will set the backdrop color.
+Fog on : This will turn fog on.
+Fog off : This will turn fog off.
+Fog distance FLOAT : This will set the fog distance.
+Color fog : This will set the fog color.
+
+--Object
+Delete object INT : Will delete the specified object from memory.
+Set build position FLOAT, FLOAT, FLOAT : This will set the default xyz position for all objects that are created/load.
+Set build rotation FLOAT, FLOAT, FLOAT : This will set the default xyz rotation for all objects that are created/load.
+Position object INT, FLOAT, FLOAT, FLOAT : This will position the specified object at the given xyz coordinates.
+Move object INT, FLOAT : This will move the specified object forward or backwards.
+Move object left INT, FLOAT : This will move the specified object left.
+Move object right INT, FLOAT : This will move the specified object right.
+Move object up INT, FLOAT : This will move the specified object up.
+Move object down INT FLOAT : This will move the specified object down.
+Xrotate object INT, FLOAT : This will rotate the specified object by the given value on the x axis.
+Yrotate object INT, FLOAT : This will rotate the specified object by the given value on the y axis.
+Zrotate object INT, FLOAT : This will rotate the specified object by the given value on the z axis.
+Turn object left INT, FLOAT : This will rotate the specified object left by the given value.
+Turn object right INT, FLOAT : This will rotate the specified object right by the given value.
+Rotate object INT, FLOAT, FLOAT, FLOAT : This will rotate the specified object by the given xyz angles.
+Rotateobjecttopoint INT, FLOAT, FLOAT, FLOAT, FLOAT : Will rotate the specified object towards the given xyz coordinates gradually, based on the given smoothness value at the end.
+Point object INT, FLOAT, FLOAT, FLOAT : This will point the specified object towards the given xyz position.
+Play object INT, FLOAT, FLOAT : This will play the specified object from the given frame to the second given frame.
+Loop object INT, FLOAT, FLOAT : This will loop the specified object from the given frame to the second given frame.
+Stop object INT : This will stop the specified object from playing its animation.
+Set object frame INT, FLOAT : This will set the given object to the given frame.
+Set object speed INT, FLOAT : This will set the given objects animation speed.
+Set object visible INT : Will set the visibility for the current object. 1 for visible and 0 for not visible. An invisible object won't be picked up by the Objectundermouse command.
+-Collision
+Set object collision INT, INT : This will set the given objects collision on(1) or off(0).
+Runcollision INT : Will calculate the collision for the given object using 3-axis intersections and reposition it accordingly.
+Runxintersections INT : Will calculate the collision for the given object on the x axis and reposition it accordingly.
+Runyintersections INT : Will calculate the collision for the given object on the y axis and reposition it accordingly.
+Runzintersections INT : Will calculate the collision for the given object on the z axis and reposition it accordingly.
+runspherecollision INT, FLOAT, FLOAT, FLOAT, FLOAT : Will check if the given object has collided with any other object between the given X/Y/Z coords to its current position using the radius in the last float to adjust line size.
+
+---2D
+Print INT/FLOAT/STRING : This will print the specified data to the set cursor position on screen.
+Set cursor INT, INT : This will set the cursor for the print command.
+Text INT, INT, INT/FLOAT/STRING : This will print the specified data to the screen at the at the specified x and y screen positions.
+Set text font STRING : Sets the font to be used by the 'Text' command.
+Set text size INT : Sets the size of the font to be used by the 'Text' command.
+Position Mouse INT, INT : Will set the mouse position to that of the given X and Y screen position.
+Set Mouse Visible INT : This will set the visibility of the mouse. 1 being visible and 0 being invisible.
+Draw box INT, INT, INT, INT, INT, INT, INT, INT : Will draw a box from the given xy position to the given xy position. The additional values are for ethe colour of each corner.
+Draw line INT, INT, INT, INT : Will draw a line from the given xy position to the given xy position.
+Draw dot INT, INT, INT : Will draw a dot at the given xy position. The additional value is for the colour of the dot.
+
+--Image
+Delete image INT : Will delete the specified image from memory.
+Draw image INT, INT, INT : Will display the specified image at the given xy screen position.
+
+---Sound
+Delete sound INT : This will delete the specified sound from memory.
+Play sound INT : This will play the specified sound.
+Loop sound INT : This will loop the specified sound.
+Pause sound INT : This will pause the specified sound.
+Stop sound INT : This will stop the specified sound.
+
+
+---Music
+Delete music INT : This will delete the specified music from memory.
+Play music INT : This will play the specified music.
+Loop music INT : This will loop the specified music.
+Pause music INT : This will pause the specified music.
+Stop music INT : This will stop the specified music.
+
+
+--Client/Server
+Net_Update : Will check for new messages and update the return commands in preperation for them.
+Net_Send_String INT, STRING : Will send the given the string using the given INT as a label for the message type.
+Net_Send_Position_XY_Y FLOAT, FLOAT, FLOAT : Will send the given XY coords and the Y angle of the clients object.
+Net_Send_Position_XYZ_Y FLOAT, FLOAT, FLOAT : Will send the given XYZ coords and the Y angle of the client object.
+Net_Send_Position_XYZ_XYZ FLOAT, FLOAT, FLOAT : Will send the given XYZ coords and the XYZ angles of the client object.

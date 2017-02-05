@@ -1,0 +1,17 @@
+function add_player_weapon($name, $number, $atk, $speed, $ammo, $object, $sound)
+	setData "player.gun."+$number+".name", $name
+	setData "player.gun."+$number+".number", $number
+	setData "player.gun."+$number+".damage", $atk
+	setData "player.gun."+$number+".reloadtime", $speed
+	setData "player.gun."+$number+".lastattacktime", 0
+	setData "player.gun."+$number+".ammo", $ammo
+	setData "player.gun."+$number+".object", $object
+	setData "player.gun."+$number+".sound", $sound
+	Set object collision $object, 0
+	set object scale $object, 10000, 10000, 10000
+	set object visible $object, 0
+endfunction
+
+function add_weapon_ammo($number, $ammo)
+	setData "player.gun."+$number+".ammo", getData("player.gun."+$number+".ammo") + $ammo
+endfunction

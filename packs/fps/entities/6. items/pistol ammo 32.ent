@@ -1,0 +1,32 @@
+<iscript>
+	$item.ammo.32# = makecube(30)
+	move object up $item.ammo.32#, 25
+</iscript>
+
+<lscript>
+	if $item.ammo.32# > 0
+		yrotate object $item.ammo.32#, object angle y($item.ammo.32#) + delta(1)
+		if $player.object > 0
+			if objectswithinrange($item.ammo.32#, $player.object, 100) = 1
+				
+				if $gun.object > 0
+					setData "player.gun."+$gun.active+".ammo", $gun.ammo
+				endif
+				
+				add_weapon_ammo(1, 32)
+				
+				$gun.ammo = getData("player.gun."+$gun.active+".ammo")
+				
+				delete object $item.ammo.32#
+				$item.ammo.32# = 0
+				
+			endif
+		endif
+	endif
+</lscript>
+
+<escript>
+	if $item.ammo.32# > 0
+		delete object $item.ammo.32#
+	endif
+</escript>

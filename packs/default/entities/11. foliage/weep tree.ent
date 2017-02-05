@@ -1,0 +1,14 @@
+<iscript>
+$object.tree# = loadobject("data\obj\nature\trees\weep tree\weep.dbo")
+yrotate object $object.tree#, rnd(360)
+set object collision $object.tree#, 1
+set object transparency $object.tree#, 4
+</iscript>
+
+<lscript>
+
+</lscript>
+
+<escript>
+delete object $object.tree#
+</escript>

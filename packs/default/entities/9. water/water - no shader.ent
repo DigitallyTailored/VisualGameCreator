@@ -1,0 +1,37 @@
+id=water
+
+<iscript>
+$water.object = makeplain(300000)
+$water.level = object position y($water.object)
+xrotate object $water.object, 90
+$water.image = loadimage("data\obj\water\water perspective.png")
+texture object $water.object, $water.image
+set object transparency $water.object, 3
+set object fog $water.object, 0
+
+$water.object2 = makeplain(300000)
+xrotate object $water.object2, 90
+texture object $water.object2, $water.image
+set object transparency $water.object2, 3
+set object fog $water.object2, 0
+
+$water.object3 = loadobject("data\obj\water\water ground.x")
+set object scale $water.object3, 40000,30000,40000
+texture object $water.object3, $water.image
+set object fog $water.object3, 0
+
+</iscript>
+
+<lscript>
+yrotate object $water.object, object angle y($water.object)+delta(0.03)
+yrotate object $water.object2, object angle y($water.object2)-delta(0.03)
+position object $water.object, camera position x(), $water.level, camera position z()
+position object $water.object2, camera position x(), $water.level-50, camera position z()
+position object $water.object3, camera position x(), $water.level-600, camera position z()
+</lscript>
+
+<escript>
+delete object $water.object
+delete object $water.object2
+delete object $water.object3
+</escript>

@@ -1,0 +1,150 @@
+<iscript>
+		`npc object
+		`$NPC.Object# = MakeBox(100, 130, 100)
+		$NPC.Object# = loadobject("data\obj\bad guy\USA.x")
+		set object scale $NPC.Object#, 300, 300, 300
+		move object up $NPC.Object#, 75
+		set object collision $NPC.Object#, 1
+		
+		
+		`diplomacy
+		$NPC.Enemy# = 1
+		`$NPC.Flee# = 0
+		
+		`sight
+		$NPC.Range# = 6000
+		$NPC.Angle# = 90
+		
+		`stats
+		$NPC.Health# = 10
+		$NPC.MHealth# = $NPC.Health#
+		
+		$NPC.Sound.shoot# = loadsound("data\obj\bad guy\shoot.wav")
+		
+		$NPC.AttackStrength# = 3
+		$NPC.AttackRange# = 2000
+			$NPC.AttackTime# = 2000
+			$NPC.LastAttackTime# = 0
+			$NPC.WithinAttackRange# = 0
+		
+		`movement
+		$NPC.Speed# = 3
+		$NPC.Gravity# = 7
+		$NPC.Patrol# = 1
+		
+		$NPC.Dest.X# = object position x($NPC.Object#)
+		$NPC.Dest.Y# = object position y($NPC.Object#)
+		$NPC.Dest.Z# = object position z($NPC.Object#)
+</iscript>
+	
+	
+<lscript>
+	`if alive then run the ai
+	if $NPC.Health# > 0
+		`if hit then deduct health
+		$hit = getData("hit." + $NPC.Object#)
+		if $hit > 0
+			$NPC.Health# = $NPC.Health# - $hit
+			setData "hit." + $NPC.Object#, 0
+		endif
+		
+		`if an enemy, check if we can see the player
+		if $player.object > 0
+			if $NPC.Enemy# = 1
+				if ObjectWithinRange( $NPC.Object#, object position x($player.object), object position y($NPC.Object#), object position z($player.object), $NPC.Range# ) = 1
+					if PointingToPosition( $NPC.Object#, object position x($player.object), object position y($NPC.Object#), object position z($player.object), $NPC.Angle# ) = 1
+						if ObjectsLineClear($NPC.Object#, $player.object) = 1
+							$NPC.Dest.X# = object position x($player.object)
+							$NPC.Dest.Y# = object position y($NPC.Object#)
+							$NPC.Dest.Z# = object position z($player.object)
+							
+							`we know it's been seen so lets see if we can attack it
+							if ObjectsWithinRange( $NPC.Object#, $player.object, $NPC.AttackRange# ) = 1
+								$NPC.WithinAttackRange# = 1
+								`we're within weapons range so lets attack
+								if $NPC.LastAttackTime# + $NPC.AttackTime# < Timer()
+									play sound $NPC.Sound.shoot#
+									setData "hit." + $player.object, $NPC.AttackStrength#
+									$NPC.LastAttackTime# = Timer()
+								endif
+							else
+								$NPC.WithinAttackRange# = 0
+							endif
+						else
+							$NPC.WithinAttackRange# = 0
+						endif
+					else
+						$NPC.WithinAttackRange# = 0
+					endif
+				else
+					$NPC.WithinAttackRange# = 0
+				endif
+				
+			endif
+		endif
+		
+		if ObjectWithinRange( $NPC.Object#, $NPC.Dest.X#, $NPC.Dest.Y#, $NPC.Dest.Z#, 100 ) = 1
+			if $NPC.Enemy# = 1
+				if $player.object > 0
+					if ObjectsWithinRange( $NPC.Object#, $player.object, 10 ) = 1
+						$NPC.Dest.X# = object position x($player.object)
+						$NPC.Dest.Y# = object position y($NPC.Object#)
+						$NPC.Dest.Z# = object position z($player.object)
+						RotateObjectToPoint $NPC.Object#, $NPC.Dest.X#, object position y($NPC.Object#), $NPC.Dest.Z#, 5
+					else
+						$null1 = 0-500+rnd(1000)
+						$null2 = 0-500+rnd(1000)
+						if ObjectLineClear( $NPC.Object#, object position x($NPC.Object#)+$null1, object position y($NPC.Object#), object position z($NPC.Object#)+$null2 ) = 1
+							$NPC.Dest.X# = object position x($NPC.Object#) + $null1
+							$NPC.Dest.Y# = object position y($NPC.Object#)
+							$NPC.Dest.Z# = object position z($NPC.Object#) + $null2
+						endif
+					endif
+				else
+					$null1 = 0-500+rnd(1000)
+					$null2 = 0-500+rnd(1000)
+					if ObjectLineClear( $NPC.Object#, object position x($NPC.Object#)+$null1, object position y($NPC.Object#), object position z($NPC.Object#)+$null2 ) = 1
+						$NPC.Dest.X# = object position x($NPC.Object#) + $null1
+						$NPC.Dest.Y# = object position y($NPC.Object#)
+						$NPC.Dest.Z# = object position z($NPC.Object#) + $null2
+					endif
+				endif
+			else
+				$null1 = 0-500+rnd(1000)
+				$null2 = 0-500+rnd(1000)
+				if ObjectLineClear( $NPC.Object#, object position x($NPC.Object#)+$null1, object position y($NPC.Object#), object position z($NPC.Object#)+$null2 ) = 1
+					$NPC.Dest.X# = object position x($NPC.Object#) + $null1
+					$NPC.Dest.Y# = object position y($NPC.Object#)
+					$NPC.Dest.Z# = object position z($NPC.Object#) + $null2
+				endif
+			endif
+		else
+			RotateObjectToPoint $NPC.Object#, $NPC.Dest.X#, object position y($NPC.Object#), $NPC.Dest.Z#, 5
+			if $NPC.WithinAttackRange# = 0
+				if PointingToPosition($NPC.Object#, $NPC.Dest.X#, object position y($NPC.Object#), $NPC.Dest.Z#, 30) = 1		
+					Move Object $NPC.Object#, delta($NPC.Speed#)
+				endif
+			endif
+		endif
+	
+	endif
+	
+	`run this stuff even if it's dead
+	`Gravity and water/land effects
+		if object position y($NPC.Object#) > $Water.Level + 10
+			`position object $NPC.Object#,object position x($NPC.Object#),object position y($NPC.Object#) - delta($NPC.Gravity#),object position z($NPC.Object#)
+			position object $NPC.Object#,object position x($NPC.Object#),object position y($NPC.Object#) - $NPC.Gravity#,object position z($NPC.Object#)
+		else
+			if object position y($NPC.Object#) < $Water.Level + 2
+				position object $NPC.Object#,object position x($NPC.Object#),object position y($NPC.Object#) + delta(1),object position z($NPC.Object#)
+			endif
+		endif
+	
+	RunCollision $NPC.Object#
+	
+</lscript>
+
+
+<escript>
+		Delete Object $NPC.Object#
+</escript>

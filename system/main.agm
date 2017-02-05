@@ -1,0 +1,4 @@
+project name=system
+script file=main.script
+prefab dir=.
+encryption=off

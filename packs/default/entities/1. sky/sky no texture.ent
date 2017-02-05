@@ -1,0 +1,24 @@
+id=sky
+
+<iscript>
+$sky.object = makesphere(0 - 220000)
+
+set object color $sky.object, rgb(114, 178, 222)
+set object ambience $sky.object, rgb(114, 178, 222)
+set object specular $sky.object, rgb(114, 178, 222)
+set object speculation $sky.object, 100
+set object collision $sky.object, 0
+set object fog $sky.object, 0
+`set object scale $sky.object, 100, 100, 100
+xrotate object $sky.object, 90
+</iscript>
+
+<lscript>
+
+position object $sky.object, camera position x(), camera position y(), camera position z()
+
+</lscript>
+
+<escript>
+delete object $sky.object
+</escript>

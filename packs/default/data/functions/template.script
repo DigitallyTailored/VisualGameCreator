@@ -1,0 +1,3 @@
+function template()
+	text 30,30, "template function"
+endfunction

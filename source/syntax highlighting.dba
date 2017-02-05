@@ -1,0 +1,208 @@
+
+function HighlightRichEdit(r_edit as integer, all as integer)
+	setAutoUpdate r_edit, 0
+	`setgadgetenabled r_edit, 0
+	
+	olds = getselstart(r_edit)
+	olde = getsellen(r_edit)
+	
+	
+	`set window title str$(r_edit)+getgadgettext(r_edit)
+	edit_txt$ = getgadgettext(r_edit)
+	edit_txt$ = remove_chr(edit_txt$, 10)
+	if all = 0
+		`first_chr = first_line_chr(r_edit)
+		`edit_len = last_line_chr(r_edit, first_chr)
+		first_chr = getLineStart(r_edit)
+		edit_len = getLineEnd(r_edit)
+	endif
+	if all = 1
+		first_chr = 0
+		edit_len = len(edit_txt$)
+	endif
+	if all = 2
+		`first_chr = last_first_line_chr(r_edit)
+		`edit_len = last_line_chr(r_edit, first_chr)
+		first_chr = getLastLineStart(r_edit)
+		edit_len = getLastLineEnd(r_edit)
+	endif
+	`remstart
+	`selstart = 0
+	selstart = first_chr
+	sellen = 0
+	
+	`reset to black
+	remstart
+	if all = 1
+		setselstart r_edit, 0
+	else
+		setselstart r_edit, first_chr
+	endif
+	setsellen r_edit, edit_len
+	setselfont r_edit, script_keyword_font, rgb(0,0,0)
+	remend
+			
+	`setsellen r_edit, 0
+	
+	`setselstart r_edit, olds
+	`setsellen r_edit, olde
+	setselfont r_edit,script_default_font, rgb(0,0,0)
+	clear entry buffer
+	repeat
+		
+		
+		
+		`go through keywords
+		longest = 0
+		for a = 1 to key_count
+			length = len(key(a).words)
+			if length > longest then longest = length
+			`message edit_txt$+chr$(13)+chr$(10)+ "'"+ lower$(right$(left$(edit_txt$, selstart+len(key(a).words)), len(key(a).words))) +"'"
+			if lower$(right$(left$(edit_txt$, selstart+length), length)) = lower$(key(a).words)
+				sellen = length
+				`
+				`setgadgetenabled r_edit, 0
+				
+				while scancode()
+					paintgadget r_edit
+				endwhile
+				
+				olds = getselstart(r_edit)
+				olde = getsellen(r_edit)
+				
+				
+				setselstart r_edit, selstart
+				setsellen r_edit, sellen
+				setselfont r_edit, script_keyword_font, rgb(0,0,255)
+				`setgadgetenabled r_edit, 1
+				
+				`reset font
+				setselstart r_edit, olds+len(entry$())
+				clear entry buffer
+				setsellen r_edit, olde
+				setselfont r_edit,script_default_font, rgb(0,0,0)
+				
+				`paintgadget r_edit
+				
+				selstart = selstart+sellen
+				`sellen = 0
+				change = 1
+								
+			endif
+			paintgadget r_edit
+		next a
+		`remstart
+		if change = 0
+			
+			while scancode()
+				paintgadget r_edit
+			endwhile
+				
+			olds = getselstart(r_edit)
+			olde = getsellen(r_edit)
+			
+			`setgadgetenabled r_edit, 0
+			`setselstart r_edit, selstart
+			`setsellen r_edit, longest
+			`setselfont r_edit, script_keyword_font, rgb(0,0,0)
+			`setgadgetenabled r_edit, 1
+			
+			
+			`inc selstart
+			
+			`reset font
+			setselstart r_edit, olds
+			setsellen r_edit, olde
+			setselfont r_edit,script_default_font, rgb(0,0,0)
+			
+			`paintgadget r_edit
+			
+		endif
+		`remend
+		if change = 0
+			inc selstart
+		endif
+		change = 0
+		
+		
+		paintgadget r_edit
+	until selstart+sellen => edit_len
+	
+	setselstart r_edit, olds
+	setsellen r_edit, olde
+	setselfont r_edit,script_default_font, rgb(0,0,0)
+	
+	`setgadgetenabled r_edit, 1
+	activategadget r_edit
+	setAutoUpdate r_edit, 1
+	paintgadget r_edit
+endfunction
+
+`alt functions
+function getLineStart(richEdit)
+	richEdit_txt$ = getgadgettext(richEdit)
+	richEdit_txt$ = remove_chr(richEdit_txt$, 10)
+	pos as dword
+	pos = getSelStart(richEdit)+1
+	while pos<>1 and mid$(richEdit_txt$,pos-1)<>chr$(13)
+		dec pos,1
+	endwhile
+	dec pos,1
+endfunction pos
+
+function getLineEnd(richEdit)
+	richEdit_txt$ = getgadgettext(richEdit)
+	richEdit_txt$ = remove_chr(richEdit_txt$, 10)
+	richEdit_len = len(richEdit_txt$)
+	pos as dword
+	pos = getSelStart(richEdit)
+	while pos<>richEdit_len and mid$(richEdit_txt$,pos+1)<>chr$(13)
+		inc pos,1
+	endwhile
+endfunction pos
+
+function getLastLineStart(richEdit)
+	richEdit_txt$ = getgadgettext(richEdit)
+	richEdit_txt$ = remove_chr(richEdit_txt$, 10)
+	pos as dword
+	pos = getSelStart(richEdit)
+	while pos<>1 and mid$(richEdit_txt$,pos-1)<>chr$(13)
+		dec pos,1
+	endwhile
+	`dec pos,1
+	while pos<>1 and mid$(richEdit_txt$,pos-1)<>chr$(13)
+		dec pos,1
+	endwhile
+	dec pos,1
+endfunction pos
+
+function getLastLineEnd(richEdit)
+	richEdit_txt$ = getgadgettext(richEdit)
+	richEdit_txt$ = remove_chr(richEdit_txt$, 10)
+	richEdit_len = len(richEdit_txt$)
+	pos as dword
+	pos = getSelStart(richEdit)
+	while pos<>richEdit_len and mid$(richEdit_txt$,pos+1)<>chr$(13)
+		dec pos,1
+	endwhile
+endfunction pos
+
+
+
+
+
+function remove_chr(str as string, chr as integer)
+	for a = 1 to len(str)
+		if mid$(str, a) = chr$(chr) = 0
+			f_r$ = f_r$ + mid$(str, a)
+		endif
+	next a
+endfunction f_r$
+
+
+function add_keyword(wrd as string, col as integer)
+inc key_count
+dim key(key_count) as keyword_fields
+key(key_count).words = wrd
+key(key_count).colour = col 
+endfunction

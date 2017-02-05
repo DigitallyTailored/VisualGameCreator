@@ -1,0 +1,66 @@
+version=DBP1.00
+;--> DarkBASIC Professional Project <--
+;--> Created with Indigo 1.3.1.8 <--
+;--> Basic project details <--
+project name=Visual Game Creator
+project comments=
+
+;--> Files <--
+final source=_Temp.dbsource
+main=source\main.dba
+include1=source\setup.dba
+include2=..\AGE engine\level.dba
+include3=..\AGE engine\parse.dba
+include4=..\AGE engine\oo.dba
+include5=source\packs.dba
+include6=source\control.dba
+include7=..\AGE engine\collision.dba
+include8=..\AGE engine\functions.dba
+include9=source\arrays.dba
+include10=..\AGE engine\lighting.dba
+include11=..\AGE engine\age_gui.dba
+include12=source\gui.dba
+include13=source\syntax highlighting.dba
+include14=source\menu.dba
+executable=VGC.exe
+build type=exe
+
+;--> Debug Mode YES/NO <--
+CLI=NO
+
+;--> Media Settings <--
+compression=NO
+encryption=NO
+media root path=D:\projects\DBP\Visual Game Creator\
+
+;--> Included Media <--
+
+;--> Cursors <--
+
+;--> Icons <--
+
+;--> Other Settings <--
+app title=Visual Game Creator
+graphics mode=window
+fullscreen resolution=1024x768x32
+window resolution=1280x768
+
+;--> Version Information <--
+verfilename=
+verfiledesc=
+vercompany=
+verfilenumber=
+verproduct=
+verproductnumber=v1.0
+vercopyright=
+vercomments=
+verinternal=v1.0
+vertrademark=
+
+;--> Config/setup.ini values <--
+RemoveSafetyCode=NO
+SafeArrays=YES
+LocalTempFolder=NO
+ExternaliseDLLS=NO
+
+;--> Project Organization <--

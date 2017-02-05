@@ -1,0 +1,12 @@
+<iscript>
+$object.rock# = loadobject("data\obj\nature\rocks\rock.x")
+set object collision $object.rock#, 1
+</iscript>
+
+<lscript>
+
+</lscript>
+
+<escript>
+delete object $object.rock#
+</escript>

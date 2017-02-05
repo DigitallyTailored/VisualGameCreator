@@ -1,0 +1,1118 @@
+Function load_gui(folder as string)
+set dir mediaDirectory
+	global gui_on : gui_on = 1
+	
+	dim gui_list(0)
+	dim gui_type(0)
+	dim gui_x1(0)
+	dim gui_y1(0)
+	dim gui_x2(0)
+	dim gui_y2(0)
+	dim gui_content(0) as string
+	dim gui_file_bool(0)
+	dim gui_handle(0)
+	`special handle holder for external input
+	dim gui_dhandle(0)
+	
+	` - mouse related
+	Global gui_mousex
+	Global gui_mousey
+	Global gui_last_under_mouse
+	Global gui_under_mouse
+	
+	`mouse states - not gui handles
+	Global gui_mlastclick
+	Global gui_mclick
+	Global gui_mclicked
+	
+	global gui_select
+	global gui_pushed
+	global gui_released
+	global gui_moffx
+	global gui_moffy
+	
+	`The last active gui elements
+	global gui_active
+	global gui_active_window
+	
+	`The mouse handles for the gui
+	global gui_clicked
+	` - 
+	
+	#constant gui_window 1
+	#constant gui_panel 2
+	#constant gui_button 3
+	#constant gui_textbox 4
+	#constant gui_label 5
+	
+	`load gui settings
+	open to read 1, "data\gui\"+folder+"\gui.ini"
+		repeat
+			read string 1, line$
+			line$ = lower$(line$)
+			`inside gui colours
+			if left$(line$, 3) = "wc="
+				global gui_wc : gui_wc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 4) = "wic="
+				global gui_wic : gui_wic = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 3) = "pc="
+				global gui_pc : gui_pc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 3) = "bc="
+				global gui_bc : gui_bc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 4) = "bdc="
+				global gui_bdc : gui_bdc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 3) = "tc="
+				global gui_tc : gui_tc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 3) = "lc="
+				global gui_lc : gui_lc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			
+			`gui text colours
+			if left$(line$, 4) = "wtc="
+				global gui_wtc : gui_wtc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 4) = "ptc="
+				global gui_ptc : gui_ptc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 4) = "btc="
+				global gui_btc : gui_btc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 4) = "ttc="
+				global gui_ttc : gui_ttc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+			if left$(line$, 4) = "ltc="
+				global gui_ltc : gui_ltc = rgb(int(val(CutParse(1,",",CutParse(2,"=",line$)))),int(val(CutParse(2,",",CutParse(2,"=",line$)))),int(val(CutParse(3,",",CutParse(2,"=",line$)))))
+			endif
+		until file end(1)
+	close file 1
+	
+	`load gui images
+	`windows - active
+	dim gui_win(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_win(a,b) > 0
+				if image exist(gui_win(a,b))
+					delete image gui_win(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_win(1,1) = LoadImageA("data\gui\"+folder+"\active window\1-1.png")
+	gui_win(1,2) = LoadImageA("data\gui\"+folder+"\active window\1-2.png")
+	gui_win(1,3) = LoadImageA("data\gui\"+folder+"\active window\1-3.png")
+	gui_win(2,1) = LoadImageA("data\gui\"+folder+"\active window\2-1.png")
+	gui_win(2,2) = LoadImageA("data\gui\"+folder+"\active window\2-2.png")
+	gui_win(2,3) = LoadImageA("data\gui\"+folder+"\active window\2-3.png")
+	gui_win(3,1) = LoadImageA("data\gui\"+folder+"\active window\3-1.png")
+	gui_win(3,2) = LoadImageA("data\gui\"+folder+"\active window\3-2.png")
+	gui_win(3,3) = LoadImageA("data\gui\"+folder+"\active window\3-3.png")
+	
+	`windows - inactive
+	dim gui_wini(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_wini(a,b) > 0
+				if image exist(gui_wini(a,b))
+					delete image gui_wini(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_wini(1,1) = LoadImageA("data\gui\"+folder+"\inactive window\1-1.png")
+	gui_wini(1,2) = LoadImageA("data\gui\"+folder+"\inactive window\1-2.png")
+	gui_wini(1,3) = LoadImageA("data\gui\"+folder+"\inactive window\1-3.png")
+	gui_wini(2,1) = LoadImageA("data\gui\"+folder+"\inactive window\2-1.png")
+	gui_wini(2,2) = LoadImageA("data\gui\"+folder+"\inactive window\2-2.png")
+	gui_wini(2,3) = LoadImageA("data\gui\"+folder+"\inactive window\2-3.png")
+	gui_wini(3,1) = LoadImageA("data\gui\"+folder+"\inactive window\3-1.png")
+	gui_wini(3,2) = LoadImageA("data\gui\"+folder+"\inactive window\3-2.png")
+	gui_wini(3,3) = LoadImageA("data\gui\"+folder+"\inactive window\3-3.png")
+	
+	
+	`panels
+	dim gui_pan(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_pan(a,b) > 0
+				if image exist(gui_pan(a,b))
+					delete image gui_pan(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_pan(1,1) = LoadImageA("data\gui\"+folder+"\panel\1-1.png")
+	gui_pan(1,2) = LoadImageA("data\gui\"+folder+"\panel\1-2.png")
+	gui_pan(1,3) = LoadImageA("data\gui\"+folder+"\panel\1-3.png")
+	gui_pan(2,1) = LoadImageA("data\gui\"+folder+"\panel\2-1.png")
+	gui_pan(2,2) = LoadImageA("data\gui\"+folder+"\panel\2-2.png")
+	gui_pan(2,3) = LoadImageA("data\gui\"+folder+"\panel\2-3.png")
+	gui_pan(3,1) = LoadImageA("data\gui\"+folder+"\panel\3-1.png")
+	gui_pan(3,2) = LoadImageA("data\gui\"+folder+"\panel\3-2.png")
+	gui_pan(3,3) = LoadImageA("data\gui\"+folder+"\panel\3-3.png")
+
+	
+	`buttons - up
+	dim gui_btn(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_btn(a,b) > 0
+				if image exist(gui_btn(a,b))
+					delete image gui_btn(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_btn(1,1) = LoadImageA("data\gui\"+folder+"\button up\1-1.png")
+	gui_btn(1,2) = LoadImageA("data\gui\"+folder+"\button up\1-2.png")
+	gui_btn(1,3) = LoadImageA("data\gui\"+folder+"\button up\1-3.png")
+	gui_btn(2,1) = LoadImageA("data\gui\"+folder+"\button up\2-1.png")
+	gui_btn(2,2) = LoadImageA("data\gui\"+folder+"\button up\2-2.png")
+	gui_btn(2,3) = LoadImageA("data\gui\"+folder+"\button up\2-3.png")
+	gui_btn(3,1) = LoadImageA("data\gui\"+folder+"\button up\3-1.png")
+	gui_btn(3,2) = LoadImageA("data\gui\"+folder+"\button up\3-2.png")
+	gui_btn(3,3) = LoadImageA("data\gui\"+folder+"\button up\3-3.png")
+	
+	`buttons - down
+	dim gui_btnd(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_btnd(a,b) > 0
+				if image exist(gui_btnd(a,b))
+					delete image gui_btnd(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_btnd(1,1) = LoadImageA("data\gui\"+folder+"\button down\1-1.png")
+	gui_btnd(1,2) = LoadImageA("data\gui\"+folder+"\button down\1-2.png")
+	gui_btnd(1,3) = LoadImageA("data\gui\"+folder+"\button down\1-3.png")
+	gui_btnd(2,1) = LoadImageA("data\gui\"+folder+"\button down\2-1.png")
+	gui_btnd(2,2) = LoadImageA("data\gui\"+folder+"\button down\2-2.png")
+	gui_btnd(2,3) = LoadImageA("data\gui\"+folder+"\button down\2-3.png")
+	gui_btnd(3,1) = LoadImageA("data\gui\"+folder+"\button down\3-1.png")
+	gui_btnd(3,2) = LoadImageA("data\gui\"+folder+"\button down\3-2.png")
+	gui_btnd(3,3) = LoadImageA("data\gui\"+folder+"\button down\3-3.png")
+	
+	
+	`textbox
+	dim gui_txb(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_txb(a,b) > 0
+				if image exist(gui_txb(a,b))
+					delete image gui_txb(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_txb(1,1) = LoadImageA("data\gui\"+folder+"\textbox\1-1.png")
+	gui_txb(1,2) = LoadImageA("data\gui\"+folder+"\textbox\1-2.png")
+	gui_txb(1,3) = LoadImageA("data\gui\"+folder+"\textbox\1-3.png")
+	gui_txb(2,1) = LoadImageA("data\gui\"+folder+"\textbox\2-1.png")
+	gui_txb(2,2) = LoadImageA("data\gui\"+folder+"\textbox\2-2.png")
+	gui_txb(2,3) = LoadImageA("data\gui\"+folder+"\textbox\2-3.png")
+	gui_txb(3,1) = LoadImageA("data\gui\"+folder+"\textbox\3-1.png")
+	gui_txb(3,2) = LoadImageA("data\gui\"+folder+"\textbox\3-2.png")
+	gui_txb(3,3) = LoadImageA("data\gui\"+folder+"\textbox\3-3.png")
+	
+	
+	`label
+	dim gui_lbl(3,3)
+	for a = 1 to 3
+		for b = 1 to 3
+			if gui_lbl(a,b) > 0
+				if image exist(gui_lbl(a,b))
+					delete image gui_lbl(a,b)
+				endif
+			endif
+		next b
+	next a
+	gui_lbl(1,1) = LoadImageA("data\gui\"+folder+"\label\1-1.png")
+	gui_lbl(1,2) = LoadImageA("data\gui\"+folder+"\label\1-2.png")
+	gui_lbl(1,3) = LoadImageA("data\gui\"+folder+"\label\1-3.png")
+	gui_lbl(2,1) = LoadImageA("data\gui\"+folder+"\label\2-1.png")
+	gui_lbl(2,2) = LoadImageA("data\gui\"+folder+"\label\2-2.png")
+	gui_lbl(2,3) = LoadImageA("data\gui\"+folder+"\label\2-3.png")
+	gui_lbl(3,1) = LoadImageA("data\gui\"+folder+"\label\3-1.png")
+	gui_lbl(3,2) = LoadImageA("data\gui\"+folder+"\label\3-2.png")
+	gui_lbl(3,3) = LoadImageA("data\gui\"+folder+"\label\3-3.png")
+	
+	
+endfunction
+
+Function free_gui()
+	if gui_list(0) > 0
+		for a = 1 to gui_list(0)
+			if gui_list(a) = 0
+				g_n = a
+				exitfunction g_n
+			endif
+		next a
+	endif
+	
+	inc gui_list(0)
+	dim gui_list(gui_list(0)) : gui_list(gui_list(0)) = gui_list(0)
+	dim gui_type(gui_list(0))
+	dim gui_x1(gui_list(0))
+	dim gui_y1(gui_list(0))
+	dim gui_x2(gui_list(0))
+	dim gui_y2(gui_list(0))
+	dim gui_content(gui_list(0)) as string
+	dim gui_file_bool(gui_list(0))
+	dim gui_handle(gui_list(0))
+	dim gui_dhandle(gui_list(0))
+	g_n = gui_list(0)
+set dir Main_Dir$
+endfunction g_n
+
+
+Function  gui_MakeWindow(xpos as integer, ypos as integer, xsiz as integer, ysiz as integer, con as string)
+	f_g = free_gui()
+	
+	gui_type(f_g) = gui_window
+	gui_x1(f_g) = xpos
+	gui_y1(f_g) = ypos
+	gui_x2(f_g) = xpos + xsiz
+	gui_y2(f_g) = ypos + ysiz
+	gui_content(f_g) = con
+	gui_dhandle(f_g) = f_g
+	
+endfunction f_g
+
+Function  gui_MakePanel(xpos as integer, ypos as integer, xsiz as integer, ysiz as integer, handle as integer)
+	f_g = free_gui()
+	
+	gui_type(f_g) = gui_panel
+	gui_x1(f_g) = xpos
+	gui_y1(f_g) = ypos
+	gui_x2(f_g) = xpos + xsiz
+	gui_y2(f_g) = ypos + ysiz
+	gui_handle(f_g) = handle
+	gui_dhandle(f_g) = f_g
+	
+endfunction f_g
+
+Function  gui_MakeButton(xpos as integer, ypos as integer, xsiz as integer, ysiz as integer, con as string, handle as integer)
+	f_g = free_gui()
+	
+	gui_type(f_g) = gui_button
+	gui_x1(f_g) = xpos
+	gui_y1(f_g) = ypos
+	gui_x2(f_g) = xpos + xsiz
+	gui_y2(f_g) = ypos + ysiz
+	gui_content(f_g) = con
+	gui_handle(f_g) = handle
+	gui_dhandle(f_g) = f_g
+		
+endfunction f_g
+
+Function  gui_MakeTextBox(xpos as integer, ypos as integer, xsiz as integer, ysiz as integer, con as string, handle as integer)
+	f_g = free_gui()
+	
+	gui_type(f_g) = gui_textbox
+	gui_x1(f_g) = xpos
+	gui_y1(f_g) = ypos
+	gui_x2(f_g) = xpos + xsiz
+	gui_y2(f_g) = ypos + ysiz
+	gui_content(f_g) = con
+	gui_handle(f_g) = handle
+	gui_dhandle(f_g) = f_g
+	
+endfunction f_g
+
+Function  gui_MakeLabel(xpos as integer, ypos as integer, xsiz as integer, ysiz as integer, con as string, handle as integer)
+	f_g = free_gui()
+	
+	gui_type(f_g) = gui_label
+	gui_x1(f_g) = xpos
+	gui_y1(f_g) = ypos
+	gui_x2(f_g) = xpos + xsiz
+	gui_y2(f_g) = ypos + ysiz
+	gui_content(f_g) = con
+	gui_handle(f_g) = handle
+	gui_dhandle(f_g) = f_g
+	
+endfunction f_g
+
+`little gui functions
+Function gui_SetText(gui_n as integer, new_text as string)
+	if gui_list(0) => gui_n
+		`message str$(gui_dhandle(gui_n)) + " : " + str$(gui_n)
+		gui_content(gui_dhandle(gui_n)) = new_text
+	endif
+endfunction
+
+Function gui_GetText(gui_n as integer)
+	if gui_list(0) => gui_n
+		F_Result$ = gui_content(gui_dhandle(gui_n))
+	endif
+endfunction F_Result$
+
+Function gui_SetActive(gui_n as integer)
+	if gui_list(0) => gui_n
+		gui_active = gui_dhandle(gui_n)
+	endif
+	clear entry buffer
+endfunction
+
+`Position commands
+Function gui_SetX(gui_n as integer, new_x as integer)
+	if gui_list(0) => gui_n
+		gui_x1(gui_dhandle(gui_n)) = new_x
+	endif
+endfunction
+
+Function gui_GetX(gui_n as integer)
+	if gui_list(0) => gui_n
+		F_Result = gui_x1(gui_dhandle(gui_n))
+	endif
+endfunction F_Result
+
+Function gui_SetY(gui_n as integer, new_Y as integer)
+	if gui_list(0) => gui_n
+		gui_Y1(gui_dhandle(gui_n)) = new_Y
+	endif
+endfunction
+
+Function gui_GetY(gui_n as integer)
+	if gui_list(0) => gui_n
+		F_Result = gui_Y1(gui_dhandle(gui_n))
+	endif
+endfunction F_Result
+
+`Size commands
+Function gui_SetXSize(gui_n as integer, new_x as integer)
+	if gui_list(0) => gui_n
+		gui_x2(gui_dhandle(gui_n)) = gui_x1(gui_dhandle(gui_n)) + new_x
+	endif
+endfunction
+
+Function gui_SetYSize(gui_n as integer, new_Y as integer)
+	if gui_list(0) => gui_n
+		gui_Y2(gui_dhandle(gui_n)) = gui_Y1(gui_dhandle(gui_n)) + new_Y
+	endif
+endfunction
+
+Function gui_GetXSize(gui_n as integer)
+	if gui_list(0) => gui_n
+		F_Result = gui_x2(gui_dhandle(gui_n)) - gui_x1(gui_dhandle(gui_n))
+	endif
+endfunction F_Result
+
+Function gui_GetYSize(gui_n as integer)
+	if gui_list(0) => gui_n
+		F_Result = gui_Y2(gui_dhandle(gui_n)) - gui_Y1(gui_dhandle(gui_n))
+	endif
+endfunction F_Result
+
+Function gui_GetClicked()
+	if gui_mclicked = 1
+		exitfunction gui_return_point(gui_under_mouse)
+	endif
+endfunction 0
+
+Function gui_return_point(gui_n)
+	if gui_list(0) => gui_n
+		for a = 1 to gui_list(0)
+			if gui_dhandle(a) = gui_n
+				exitfunction a
+			endif
+		next a
+	endif
+endfunction 0
+
+remstart
+Function Run_gui()
+	if gui_list(0) > 0
+		for a = 1 to gui_list(0)
+			`check if window - draw
+				if gui_type(a) = gui_window
+					box
+				endif
+				`check handles of other gui's match window - draw
+				
+			`check if panel with no handle - draw
+				`check handles of buttons match panel - draw
+				
+			`check if button with no handle - draw
+		next a
+	endif
+endfunction
+remend
+
+Function Run_gui()
+	if gui_on = 1
+		gui_mousex = mousex()
+		gui_mousey = mousey()
+		
+		gui_last_under_mouse = gui_under_mouse
+		gui_under_mouse = 0
+		
+		update_mouse_events()
+		
+		`store users current ink
+		Original_ink = Current_ink
+		
+		Draw_panels(0,0,0)
+		Draw_buttons(0,0,0)
+		Draw_TextBox(0,0,0)
+		Draw_Label(0,0,0)
+		Draw_windows()
+		
+		`Reset to original ink
+		New_Ink(Original_ink)
+		
+		update_gui_positions()
+		
+		`gui_clicked = gui_GetClicked()
+		
+	endif
+endfunction
+
+
+Function gui_to_front(g_n)
+if g_n < gui_list(0)
+	if gui_list(0) > 0
+			
+		g_type = gui_type(g_n)
+		g_x1 = gui_x1(g_n)
+		g_y1 = gui_y1(g_n)
+		g_x2 =gui_x2(g_n)
+		g_y2 = gui_y2(g_n)
+		g_content$ = gui_content(g_n)
+		g_handle = gui_handle(g_n)
+		
+		
+		
+		for a = g_n to gui_list(0)-1
+			gui_type(a) = gui_type(a+1)
+			gui_x1(a) = gui_x1(a+1)
+			gui_y1(a) = gui_y1(a+1)
+			gui_x2(a) =gui_x2(a+1)
+			gui_y2(a) = gui_y2(a+1)
+			gui_content(a) = gui_content(a+1)
+			gui_handle(a) = gui_handle(a+1)
+		next a
+		
+		`remstart
+		for a = 1 to gui_list(0)-1
+			if gui_handle(a) > g_n
+				gui_handle(a) = gui_handle(a)-1
+			else
+				if gui_handle(a) = g_n
+					gui_handle(a) = gui_list(0)
+				endif
+			endif
+		next a
+		`remend
+		
+		if g_handle > g_n
+			g_handle = g_handle-1
+		endif
+		
+		`adjust dynamic externally used handle
+		for b = 1 to gui_list(0)
+			if gui_dhandle(b) > g_n
+				gui_dhandle(b) = gui_dhandle(b)-1
+			else
+				if gui_dhandle(b) = g_n
+					gui_dhandle(b) = gui_list(0)
+				endif
+			endif
+		next b
+		
+		gui_type(gui_list(0)) = g_type
+		gui_x1(gui_list(0)) = g_x1
+		gui_y1(gui_list(0)) = g_y1
+		gui_x2(gui_list(0)) =g_x2
+		gui_y2(gui_list(0)) = g_y2
+		gui_content(gui_list(0)) = g_content$
+		gui_handle(gui_list(0)) = g_handle
+		
+		`Find master window for active gui
+		gui_active_window = 0
+		do
+			if g_handle > 0
+				if gui_type(g_handle) = gui_window
+					gui_active_window = g_handle
+					exit
+				else
+					g_handle = gui_handle(g_handle)
+				endif
+			else
+				if gui_type(gui_list(0)) = gui_window
+					gui_active_window = gui_list(0)
+				else
+					gui_active_window = 0
+				endif
+				exit	
+			endif
+		loop
+		
+		remstart
+		`bring window for gui to front
+		if gui_active_window > 0
+			if gui_list(0) <> gui_active_window
+				gui_to_front(gui_active_window)
+			endif
+		endif
+		remend
+		
+	endif
+endif
+
+null = gui_list(0)
+
+endfunction null
+
+Function Draw_windows()
+	if gui_list(0) > 0
+		for a = 1 to gui_list(0)
+			`check if window - draw
+			if gui_type(a) = gui_window
+				`content
+				remstart
+				for y = 1 to (gui_y2(a)-gui_y1(a))/image height(gui_win(2,2)) - 1
+					for x = 0 to (gui_x2(a)-gui_x1(a))/image width(gui_win(2,2)) - 1
+						paste image gui_win(2,2),  gui_x1(a)+(x*image width(gui_win(2,2))), gui_y1(a)+(y*image height(gui_win(2,2)))
+					next x
+				next y
+				remend
+				
+				if gui_active_window = a
+					`active window
+					box gui_x1(a)+image width(gui_win(2,1)),gui_y1(a)+image height(gui_win(1,2)),gui_x2(a)-image width(gui_win(2,3)),gui_y2(a)-image height(gui_win(3,2)),gui_wc,gui_wc,gui_wc,gui_wc
+							
+					`edges
+					for x = 1 to (gui_y2(a)-gui_y1(a))/image height(gui_win(2,1)) - 1
+						paste image gui_win(2,1), gui_x1(a), gui_y1(a)+(x*image height(gui_win(2,1))), 1
+					next x
+					`for x = 0 to (gui_y2(a)-gui_y1(a)-image height(gui_win(1,2)))/image height(gui_win(2,3))-1
+					for x = 1 to (gui_y2(a)-gui_y1(a))/image height(gui_win(2,3)) - 1
+						paste image gui_win(2,3), gui_x2(a)-IMAGE WIDTH(gui_win(2,3)), gui_y1(a)+(x*image height(gui_win(2,3))), 1
+					next x
+					for x = 1 to (gui_x2(a)-gui_x1(a)-image width(gui_win(1,3)))/image width(gui_win(1,2))
+						paste image gui_win(1,2), gui_x1(a)+(x*image width(gui_win(1,2))), gui_y1(a), 1
+					next x
+					for x = 0 to (gui_x2(a)-gui_x1(a))/image width(gui_win(3,2)) - 1
+						paste image gui_win(3,2), gui_x1(a)+(x*image width(gui_win(3,2))), gui_y2(a)-image height(gui_win(3,2)), 1
+					next x
+					
+					
+					`corners
+					paste image gui_win(1,1), gui_x1(a), gui_y1(a), 1
+					paste image gui_win(1,3), gui_x2(a)-IMAGE WIDTH(gui_win(1,3)), gui_y1(a), 1
+					paste image gui_win(3,1), gui_x1(a), gui_y2(a)-image height(gui_win(3,1)), 1
+					paste image gui_win(3,3), gui_x2(a)-IMAGE WIDTH(gui_win(3,3)), gui_y2(a)-image height(gui_win(3,3)), 1
+				else
+					`inactive window
+					box gui_x1(a)+image width(gui_wini(2,1)),gui_y1(a)+image height(gui_wini(1,2)),gui_x2(a)-image width(gui_wini(2,3)),gui_y2(a)-image height(gui_wini(3,2)),gui_wic,gui_wic,gui_wic,gui_wic
+							
+					`edges
+					for x = 1 to (gui_y2(a)-gui_y1(a))/image height(gui_wini(2,1)) - 1
+						paste image gui_wini(2,1), gui_x1(a), gui_y1(a)+(x*image height(gui_wini(2,1))), 1
+					next x
+					`for x = 0 to (gui_y2(a)-gui_y1(a)-image height(gui_wini(1,2)))/image height(gui_wini(2,3))-1
+					for x = 1 to (gui_y2(a)-gui_y1(a))/image height(gui_wini(2,3)) - 1
+						paste image gui_wini(2,3), gui_x2(a)-IMAGE WIDTH(gui_wini(2,3)), gui_y1(a)+(x*image height(gui_wini(2,3))), 1
+					next x
+					for x = 1 to (gui_x2(a)-gui_x1(a)-image width(gui_wini(1,3)))/image width(gui_wini(1,2))
+						paste image gui_wini(1,2), gui_x1(a)+(x*image width(gui_wini(1,2))), gui_y1(a), 1
+					next x
+					for x = 0 to (gui_x2(a)-gui_x1(a))/image width(gui_wini(3,2)) - 1
+						paste image gui_wini(3,2), gui_x1(a)+(x*image width(gui_wini(3,2))), gui_y2(a)-image height(gui_wini(3,2)), 1
+					next x
+					
+					
+					`corners
+					paste image gui_wini(1,1), gui_x1(a), gui_y1(a), 1
+					paste image gui_wini(1,3), gui_x2(a)-IMAGE WIDTH(gui_wini(1,3)), gui_y1(a), 1
+					paste image gui_wini(3,1), gui_x1(a), gui_y2(a)-image height(gui_wini(3,1)), 1
+					paste image gui_wini(3,3), gui_x2(a)-IMAGE WIDTH(gui_wini(3,3)), gui_y2(a)-image height(gui_wini(3,3)), 1
+				endif
+				
+				`text
+				if gui_content(a) <> ""
+					New_Ink(gui_wtc)
+					text gui_x1(a)+image width(gui_win(1,1)),gui_y1(a)+(image height(gui_win(1,2))/2)-(text height(gui_content(a))/2), gui_content(a)
+				endif
+				`check if gui under mouse
+				update_gui(a , gui_x1(a), gui_y1(a), gui_x2(a), gui_y2(a))
+				
+				
+				`check handles of other panels match window - draw
+				Draw_panels(a,gui_x1(a)+image width(gui_win(2,1)),gui_y1(a)+image height(gui_win(1,2)))
+				Draw_buttons(a,gui_x1(a)+image width(gui_win(2,1)),gui_y1(a)+image height(gui_win(1,2)))
+				Draw_textbox(a,gui_x1(a)+image width(gui_win(2,1)),gui_y1(a)+image height(gui_win(1,2)))
+				Draw_Label(a,gui_x1(a)+image width(gui_win(2,1)),gui_y1(a)+image height(gui_win(1,2)))
+			endif
+		next a
+	endif
+endfunction
+
+
+Function Draw_panels(a as integer, x_off as integer, y_off as integer)
+	for b = 1 to gui_list(0)
+		if gui_type(b) = gui_panel
+			if gui_handle(b) = a
+				
+				`content
+				remstart
+				for y = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_pan(2,2)) - 2
+					for x = 0 to (gui_x2(b)-gui_x1(b))/image width(gui_pan(2,2)) - 2
+						paste image gui_pan(2,2),  x_off+gui_x1(b)+(x*image width(gui_pan(2,2)))+image width(gui_pan(2,1)), y_off+gui_y1(b)+(y*image height(gui_pan(2,2)))+image height(gui_pan(1,1))
+					next x
+				next y
+				remend
+				
+				
+				box x_off+gui_x1(b)+image width(gui_pan(2,1)),y_off+gui_y1(b)+image height(gui_pan(1,2)),x_off+gui_x2(b)-image width(gui_pan(2,3)),y_off+gui_y2(b)-image height(gui_pan(3,2)),gui_pc,gui_pc,gui_pc,gui_pc
+				
+				`edges
+				`left
+				for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_pan(2,1)) - 2
+					paste image gui_pan(2,1), x_off+gui_x1(b), image height(gui_pan(1,1))+y_off+gui_y1(b)+(image height(gui_pan(2,1))*x), 1
+				next x
+				`right
+				for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_pan(2,3)) - 2
+					paste image gui_pan(2,3), x_off+gui_x2(b)-image width(gui_pan(2,3)), image height(gui_pan(1,3))+y_off+gui_y1(b)+(image height(gui_pan(2,3))*x), 1
+				next x
+				`top
+				for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_pan(1,2))) - 2
+					paste image gui_pan(1,2), image width(gui_pan(1,1))+x_off+gui_x1(b)+(image width(gui_pan(1,2))*x), y_off+gui_y1(b), 1
+				next x
+				`bottom
+				for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_pan(3,2))) - 2
+					paste image gui_pan(3,2), image width(gui_pan(3,1))+x_off+gui_x1(b)+(image width(gui_pan(3,2))*x), y_off+gui_y2(b)-image height(gui_pan(3,2)), 1
+				next x
+				
+				`corners
+				paste image gui_pan(1,1), x_off+gui_x1(b), y_off+gui_y1(b), 1
+				paste image gui_pan(1,3), x_off+gui_x2(b)-image width(gui_pan(1,3)), y_off+gui_y1(b), 1
+				paste image gui_pan(3,1), x_off+gui_x1(b), y_off+gui_y2(b)-image height(gui_pan(3,1)), 1
+				paste image gui_pan(3,3), x_off+gui_x2(b)-image width(gui_pan(3,3)), y_off+gui_y2(b)-image height(gui_pan(3,3)), 1
+				
+				`check if gui under mouse
+				update_gui(b , x_off+gui_x1(b), y_off+gui_y1(b), x_off+gui_x2(b), y_off+gui_y2(b))
+				
+				Draw_buttons(b, x_off+gui_x1(b), y_off+gui_y1(b))
+				Draw_TextBox(b, x_off+gui_x1(b), y_off+gui_y1(b))
+				Draw_Label(b, x_off+gui_x1(b), y_off+gui_y1(b))
+			endif
+		endif
+	next b
+endfunction
+
+Function Draw_buttons(a as integer, x_off as integer, y_off as integer)
+	for b = 1 to gui_list(0)
+		if gui_type(b) = gui_button
+			if gui_handle(b) = a
+				
+				`content
+				remstart
+				for y = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_btn(2,2)) - 2
+					for x = 0 to (gui_x2(b)-gui_x1(b))/image width(gui_btn(2,2)) - 2
+						paste image gui_btn(2,2),  x_off+gui_x1(b)+(x*image width(gui_btn(2,2)))+image width(gui_btn(2,1)), y_off+gui_y1(b)+(y*image height(gui_btn(2,2)))+image height(gui_btn(1,1))
+					next x
+				next y
+				remend
+				` and gui_under_mouse = b
+				
+				if mouseclick() = 1 and gui_last_under_mouse = b
+					`draw button down
+					box x_off+gui_x1(b)+image width(gui_btnd(2,1)),y_off+gui_y1(b)+image height(gui_btnd(1,2)),x_off+gui_x2(b)-image width(gui_btnd(2,3)),y_off+gui_y2(b)-image height(gui_btnd(3,2)),gui_bdc,gui_bdc,gui_bdc,gui_bdc
+					
+					`edges
+					`left
+					for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_btnd(2,1)) - 3
+						paste image gui_btnd(2,1), x_off+gui_x1(b), image height(gui_btnd(1,1))+y_off+gui_y1(b)+(image height(gui_btnd(2,1))*x), 1
+					next x
+					`right
+					for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_btnd(2,3)) - 3
+						paste image gui_btnd(2,3), x_off+gui_x2(b)-image width(gui_btnd(2,3)), image height(gui_btnd(1,3))+y_off+gui_y1(b)+(image height(gui_btnd(2,3))*x), 1
+					next x
+					`top
+					for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_btnd(1,2))) - 3
+						paste image gui_btnd(1,2), image width(gui_btnd(1,1))+x_off+gui_x1(b)+(image width(gui_btnd(1,2))*x), y_off+gui_y1(b), 1
+					next x
+					`bottom
+					for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_btnd(3,2))) - 3
+						paste image gui_btnd(3,2), image width(gui_btnd(3,1))+x_off+gui_x1(b)+(image width(gui_btnd(3,2))*x), y_off+gui_y2(b)-image height(gui_btnd(3,2)), 1
+					next x
+					
+					`corners
+					paste image gui_btnd(1,1), x_off+gui_x1(b), y_off+gui_y1(b), 1
+					paste image gui_btnd(1,3), x_off+gui_x2(b)-image width(gui_btnd(1,3)), y_off+gui_y1(b), 1
+					paste image gui_btnd(3,1), x_off+gui_x1(b), y_off+gui_y2(b)-image height(gui_btnd(3,1)), 1
+					paste image gui_btnd(3,3), x_off+gui_x2(b)-image width(gui_btnd(3,3)), y_off+gui_y2(b)-image height(gui_btnd(3,3)), 1
+				else
+					`draw button down
+					box x_off+gui_x1(b)+image width(gui_btn(2,1)),y_off+gui_y1(b)+image height(gui_btn(1,2)),x_off+gui_x2(b)-image width(gui_btn(2,3)),y_off+gui_y2(b)-image height(gui_btn(3,2)),gui_bc,gui_bc,gui_bc,gui_bc
+					
+					`edges
+					`left
+					for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_btn(2,1)) - 3
+						paste image gui_btn(2,1), x_off+gui_x1(b), image height(gui_btn(1,1))+y_off+gui_y1(b)+(image height(gui_btn(2,1))*x), 1
+					next x
+					`right
+					for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_btn(2,3)) - 3
+						paste image gui_btn(2,3), x_off+gui_x2(b)-image width(gui_btn(2,3)), image height(gui_btn(1,3))+y_off+gui_y1(b)+(image height(gui_btn(2,3))*x), 1
+					next x
+					`top
+					for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_btn(1,2))) - 3
+						paste image gui_btn(1,2), image width(gui_btn(1,1))+x_off+gui_x1(b)+(image width(gui_btn(1,2))*x), y_off+gui_y1(b), 1
+					next x
+					`bottom
+					for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_btn(3,2))) - 3
+						paste image gui_btn(3,2), image width(gui_btn(3,1))+x_off+gui_x1(b)+(image width(gui_btn(3,2))*x), y_off+gui_y2(b)-image height(gui_btn(3,2)), 1
+					next x
+					
+					`corners
+					paste image gui_btn(1,1), x_off+gui_x1(b), y_off+gui_y1(b), 1
+					paste image gui_btn(1,3), x_off+gui_x2(b)-image width(gui_btn(1,3)), y_off+gui_y1(b), 1
+					paste image gui_btn(3,1), x_off+gui_x1(b), y_off+gui_y2(b)-image height(gui_btn(3,1)), 1
+					paste image gui_btn(3,3), x_off+gui_x2(b)-image width(gui_btn(3,3)), y_off+gui_y2(b)-image height(gui_btn(3,3)), 1
+				endif
+				
+				`text
+				if gui_content(b) <> ""
+					New_Ink(gui_btc)
+				text x_off+gui_x1(b)+(gui_x2(b)-gui_x1(b))/2-text width(gui_content(b))/2, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-text height(gui_content(b))/2, gui_content(b)
+				endif
+				
+				`check if gui is under the mouse
+				update_gui(b , x_off+gui_x1(b), y_off+gui_y1(b), x_off+gui_x2(b), y_off+gui_y2(b))
+				
+			endif
+		endif
+	next b
+endfunction
+
+Function Draw_TextBox(a as integer, x_off as integer, y_off as integer)
+	for b = 1 to gui_list(0)
+		if gui_type(b) = gui_textbox
+			if gui_handle(b) = a
+				
+				`content
+				remstart
+				for y = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_txb(2,2)) - 2
+					for x = 0 to (gui_x2(b)-gui_x1(b))/image width(gui_txb(2,2)) - 2
+						paste image gui_txb(2,2),  x_off+gui_x1(b)+(x*image width(gui_txb(2,2)))+image width(gui_txb(2,1)), y_off+gui_y1(b)+(y*image height(gui_txb(2,2)))+image height(gui_txb(1,1))
+					next x
+				next y
+				remend
+				
+				box x_off+gui_x1(b)+image width(gui_txb(2,1)),y_off+gui_y1(b)+image height(gui_txb(1,2)),x_off+gui_x2(b)-image width(gui_txb(2,3)),y_off+gui_y2(b)-image height(gui_txb(3,2)),gui_tc,gui_tc,gui_tc,gui_tc
+				
+				`edges
+				`left
+				for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_txb(2,1)) - 2
+					paste image gui_txb(2,1), x_off+gui_x1(b), image height(gui_txb(1,1))+y_off+gui_y1(b)+(image height(gui_txb(2,1))*x), 1
+				next x
+				`right
+				for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_txb(2,3)) - 2
+					paste image gui_txb(2,3), x_off+gui_x2(b)-image width(gui_txb(2,3)), image height(gui_txb(1,3))+y_off+gui_y1(b)+(image height(gui_txb(2,3))*x), 1
+				next x
+				`top
+				for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_txb(1,2))) - 2
+					paste image gui_txb(1,2), image width(gui_txb(1,1))+x_off+gui_x1(b)+(image width(gui_txb(1,2))*x), y_off+gui_y1(b), 1
+				next x
+				`bottom
+				for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_txb(3,2))) - 2
+					paste image gui_txb(3,2), image width(gui_txb(3,1))+x_off+gui_x1(b)+(image width(gui_txb(3,2))*x), y_off+gui_y2(b)-image height(gui_txb(3,2)), 1
+				next x
+				
+				`corners
+				paste image gui_txb(1,1), x_off+gui_x1(b), y_off+gui_y1(b), 1
+				paste image gui_txb(1,3), x_off+gui_x2(b)-image width(gui_txb(1,3)), y_off+gui_y1(b), 1
+				paste image gui_txb(3,1), x_off+gui_x1(b), y_off+gui_y2(b)-image height(gui_txb(3,1)), 1
+				paste image gui_txb(3,3), x_off+gui_x2(b)-image width(gui_txb(3,3)), y_off+gui_y2(b)-image height(gui_txb(3,3)), 1
+				
+				`text
+				if gui_active = b
+					`calculate key input
+					gui_content(b) = HandleKeyEntry(gui_content(b))
+					if gui_content(b) <> ""
+						New_Ink(gui_ttc)
+						width_limit = gui_x2(b) - gui_x1(b) - image width(gui_txb(2,1)) - image width(gui_txb(2,3)) - 1
+						if text width(gui_content(b)+"_") => width_limit
+							`gui_content(b) = left$(gui_content(b), len(gui_content(b))-1)
+							cc = 0
+							repeat
+								to_print$ = right$(gui_content(b)+"_", cc)
+								inc cc
+							until text width(to_print$) => width_limit - text width("_")
+							text x_off+gui_x1(b)+image width(gui_txb(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-text height(gui_content(b))/2, to_print$
+						else
+							text x_off+gui_x1(b)+image width(gui_txb(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-text height(gui_content(b))/2, gui_content(b)+"_"
+						endif
+					else
+						New_Ink(gui_ttc)
+						text x_off+gui_x1(b)+image width(gui_txb(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-text height("|")/2, "_"
+					endif
+				else
+					if gui_content(b) <> ""
+						New_Ink(gui_ttc)
+						width_limit = gui_x2(b) - gui_x1(b) - image width(gui_txb(2,1)) - image width(gui_txb(2,3)) - 1
+						if text width(gui_content(b)) => width_limit
+							`gui_content(b) = left$(gui_content(b), len(gui_content(b))-1)
+							cc = 0
+							repeat
+								to_print$ = right$(gui_content(b), cc)
+								inc cc
+							until text width(to_print$) => width_limit - text width("_")
+							text x_off+gui_x1(b)+image width(gui_txb(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-text height(gui_content(b))/2, to_print$
+						else
+							text x_off+gui_x1(b)+image width(gui_txb(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-text height(gui_content(b))/2, gui_content(b)
+						endif
+					endif
+				endif
+				
+				`check if gui is under the mouse
+				update_gui(b , x_off+gui_x1(b), y_off+gui_y1(b), x_off+gui_x2(b), y_off+gui_y2(b))
+				
+			endif
+		endif
+	next b
+endfunction
+
+Function Draw_Label(a as integer, x_off as integer, y_off as integer)
+	for b = 1 to gui_list(0)
+		if gui_type(b) = gui_label
+			if gui_handle(b) = a
+				
+				`content
+				remstart
+				for y = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_lbl(2,2)) - 2
+					for x = 0 to (gui_x2(b)-gui_x1(b))/image width(gui_lbl(2,2)) - 2
+						paste image gui_lbl(2,2),  x_off+gui_x1(b)+(x*image width(gui_lbl(2,2)))+image width(gui_lbl(2,1)), y_off+gui_y1(b)+(y*image height(gui_lbl(2,2)))+image height(gui_lbl(1,1))
+					next x
+				next y
+				remend
+				
+				box x_off+gui_x1(b)+image width(gui_lbl(2,1)),y_off+gui_y1(b)+image height(gui_lbl(1,2)),x_off+gui_x2(b)-image width(gui_lbl(2,3)),y_off+gui_y2(b)-image height(gui_lbl(3,2)),gui_lc,gui_lc,gui_lc,gui_lc
+				
+				`edges
+				`left
+				for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_lbl(2,1)) - 2
+					paste image gui_lbl(2,1), x_off+gui_x1(b), image height(gui_lbl(1,1))+y_off+gui_y1(b)+(image height(gui_lbl(2,1))*x), 1
+				next x
+				`right
+				for x = 0 to (gui_y2(b)-gui_y1(b))/image height(gui_lbl(2,3)) - 2
+					paste image gui_lbl(2,3), x_off+gui_x2(b)-image width(gui_lbl(2,3)), image height(gui_lbl(1,3))+y_off+gui_y1(b)+(image height(gui_lbl(2,3))*x), 1
+				next x
+				`top
+				for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_lbl(1,2))) - 2
+					paste image gui_lbl(1,2), image width(gui_lbl(1,1))+x_off+gui_x1(b)+(image width(gui_lbl(1,2))*x), y_off+gui_y1(b), 1
+				next x
+				`bottom
+				for x = 0 to ((gui_x2(b)-gui_x1(b))/image width(gui_lbl(3,2))) - 2
+					paste image gui_lbl(3,2), image width(gui_lbl(3,1))+x_off+gui_x1(b)+(image width(gui_lbl(3,2))*x), y_off+gui_y2(b)-image height(gui_lbl(3,2)), 1
+				next x
+				
+				`corners
+				paste image gui_lbl(1,1), x_off+gui_x1(b), y_off+gui_y1(b), 1
+				paste image gui_lbl(1,3), x_off+gui_x2(b)-image width(gui_lbl(1,3)), y_off+gui_y1(b), 1
+				paste image gui_lbl(3,1), x_off+gui_x1(b), y_off+gui_y2(b)-image height(gui_lbl(3,1)), 1
+				paste image gui_lbl(3,3), x_off+gui_x2(b)-image width(gui_lbl(3,3)), y_off+gui_y2(b)-image height(gui_lbl(3,3)), 1
+				
+				`text
+				
+				if gui_content(b) <> ""
+					New_Ink(gui_ltc)
+					nl_count = CountChar(gui_content(b),chr$(10))
+					width_limit = gui_x2(b) - gui_x1(b) - image width(gui_lbl(2,1)) - image width(gui_lbl(2,3)) - 1
+					
+					if text width(gui_content(b)) => width_limit
+						`gui_content(b) = left$(gui_content(b), len(gui_content(b))-1)
+						cc = 0
+						repeat
+							to_check$ = right$(gui_content(b), cc)
+							inc cc
+						until text width(to_check$) => width_limit - text width("_")
+						
+						if text height("|")*nl_count > gui_y2(b)-gui_y1(b)
+							cc = 0
+							nc = 0
+							repeat
+								to_print$ = right$(to_check$, cc)
+								if mid$(to_print$,1) = chr$(10)
+									inc nc
+								endif
+								inc cc
+							until text height("|")*nc => gui_y2(b)-gui_y1(b)-text height("|")
+							to_print$ = right$(to_print$, len(to_print$)-1)
+							`dec nc
+						else
+							to_print$ = to_check$
+						endif
+						if nc = 0 then nc = 1
+						text x_off+gui_x1(b)+image width(gui_lbl(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-(text height("|")*nc)/2, to_print$
+					else
+						if text height("|")*nl_count > gui_y2(b)-gui_y1(b)
+							cc = 0
+							nc = 0
+							repeat
+								to_print$ = right$(gui_content(b), cc)
+								if mid$(to_print$,1) = chr$(10)
+									inc nc
+								endif
+								inc cc
+							until text height("|")*nc => gui_y2(b)-gui_y1(b)-text height("|")
+							to_print$ = right$(to_print$, len(to_print$)-1)
+							`dec nc
+						else
+							to_print$ = gui_content(b)
+						endif
+						if nc = 0 then nc = 1
+						text x_off+gui_x1(b)+image width(gui_lbl(2,1))+1, y_off+gui_y1(b)+(gui_y2(b)-gui_y1(b))/2-(text height("|")*nc)/2, to_print$
+					endif
+					
+				endif
+								
+				`check if gui is under the mouse
+				update_gui(b , x_off+gui_x1(b), y_off+gui_y1(b), x_off+gui_x2(b), y_off+gui_y2(b))
+				
+			endif
+		endif
+	next b
+endfunction
+
+
+Function update_gui(g_n , xp, yp, xp2, yp2)
+	if xp < gui_mousex
+		if yp < gui_mousey
+			if xp2 > gui_mousex
+				if yp2 > gui_mousey
+					gui_under_mouse = g_n
+					if gui_mclicked = 1
+						gui_clicked = gui_return_point(gui_under_mouse)
+					endif
+				endif
+			endif
+		endif
+	endif
+endfunction 
+
+
+Function update_mouse_events()
+	gui_mlastclick = gui_mclick
+	gui_mclicked = 0
+	
+	if mouseclick() = 1
+		clear entry buffer
+		gui_mclick = 1
+	else
+		if gui_mclick = 1
+			gui_mclick = 0
+			gui_mclicked = 1
+		endif
+	endif
+	
+	if gui_mlastclick = 0
+		gui_released = 0
+		if gui_mclick = 1
+			`mouse downed
+			gui_pushed = 1
+		endif
+	else
+		gui_pushed = 0
+		if gui_mclick = 0
+			`mouse upped
+			gui_released = 1
+		endif
+	endif
+		
+endfunction
+
+Function update_gui_positions()
+	if gui_pushed = 1
+		if gui_under_mouse > 0
+			gui_under_mouse = gui_to_front(gui_under_mouse)
+			gui_active = gui_under_mouse
+			if gui_type(gui_under_mouse) = gui_window
+				gui_select = gui_under_mouse
+				`gui offsets
+				gui_moffx = gui_x1(gui_select) - gui_mousex
+				gui_moffy = gui_y1(gui_select) - gui_mousey
+			endif
+		endif
+	endif
+	
+	if gui_select > 0
+		xs=gui_x2(gui_select)-gui_x1(gui_select)
+		ys=gui_y2(gui_select)-gui_y1(gui_select)
+		
+		gui_x1(gui_select) = gui_moffx + gui_mousex
+		gui_y1(gui_select) = gui_moffy + gui_mousey
+		gui_x2(gui_select) = xs+gui_moffx + gui_mousex
+		gui_y2(gui_select) = ys+gui_moffy + gui_mousey
+	endif
+	
+	if gui_released = 1
+		`deselct any gadgets
+		gui_select = 0
+	endif
+endfunction
+
+function HandleKeyEntry(cur as string)
+f_text$ = cur + entry$()
+if f_text$<>""
+	for i=1 to len(f_text$)
+		char$=mid$(f_text$,i)
+`backspace
+		if char$=chr$(8)
+			if CurrentInput$<>"" then CurrentInput$=left$(CurrentInput$,len(CurrentInput$)-1)
+`/backspace
+		else
+			if asc(Char$) >= 32
+				if asc(Char$) < 128
+					CurrentInput$ = CurrentInput$ + Char$
+				endif
+			endif
+			remstart
+			if asc(Char$) = 13
+				Result$ = CurrentInput$
+				CurrentInput$ = ""
+			endif
+			remend
+		endif
+	next i
+clear entry buffer
+endif
+endfunction CurrentInput$
+
+Function New_ink(col as integer)
+	if col = Current_ink = 0
+		ink col, 0
+		Current_ink = col
+	endif
+endfunction
+
+
+Function gui_Delete(gui_n as integer)
+	gui_type(gui_dhandle(gui_n)) = 0
+	gui_x1(gui_dhandle(gui_n)) = 0
+	gui_y1(gui_dhandle(gui_n)) = 0
+	gui_x2(gui_dhandle(gui_n)) = 0
+	gui_y2(gui_dhandle(gui_n)) = 0
+	gui_content(gui_dhandle(gui_n)) = ""
+	gui_file_bool(gui_dhandle(gui_n)) = 0
+	gui_handle(gui_dhandle(gui_n)) = 0
+	remstart
+	if gui_list(0) > 0
+		for b = 1 to gui_list(0)
+			if gui_handle(b) = gui_n
+				gui_Delete(b)
+			endif
+		next b
+	endif
+	remend
+endfunction

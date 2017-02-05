@@ -1,0 +1,75 @@
+id=red grass forager
+<iscript>
+		$Creature.Object# = MakeBox(100, 130, 100)
+		move object up $Creature.Object#, 65
+		set object visible $Creature.Object#, 0
+		$Creature.Sprite# = makeplain(100)
+		Set object collision $Creature.Sprite#, 0
+			$Creature.Image# = loadimage("data\obj\Packs\Snap to grid\ground\cement01.bmp")
+			Texture Object $Creature.Sprite#, $Creature.Image#
+		position object $Creature.Sprite#, object position x($Creature.Object#), object position y($Creature.Object#), object position z($Creature.Object#)
+	point object $Creature.Sprite#, camera position x(), camera position y(), camera position z()		
+
+		$Creature.MHealth# = 5
+		$Creature.Health# = 5
+		$Creature.Speed# = 3
+		
+		$Creature.Dest.X# = object position x($Creature.Object#)
+		$Creature.Dest.Y# = object position y($Creature.Object#)
+		$Creature.Dest.Z# = object position z($Creature.Object#)
+</iscript>
+	
+	
+<lscript>
+	if PointingToPosition( $Creature.Object#, object position x($player.object), object position y($Creature.Object#), object position z($player.object), 75 ) = 1
+		if ObjectsLineClear($Creature.Object#, $player.object) = 1
+			$Creature.Dest.X# = object position x($player.object)
+			$Creature.Dest.Y# = object position y($Creature.Object#)
+			$Creature.Dest.Z# = object position z($player.object)
+		endif
+	endif
+	
+	if ObjectWithinRange( $Creature.Object#, $Creature.Dest.X#, $Creature.Dest.Y#, $Creature.Dest.Z#, 10 ) = 1
+		if ObjectsWithinRange( $Creature.Object#, $player.object, 10 ) = 1
+			$Creature.Dest.X# = object position x($player.object)
+			$Creature.Dest.Y# = object position y($Creature.Object#)
+			$Creature.Dest.Z# = object position z($player.object)
+			RotateObjectToPoint $Creature.Object#, $Creature.Dest.X#, object position y($Creature.Object#), $Creature.Dest.Z#, 5
+		else
+			$null1 = 0-500+rnd(1000)
+			$null2 = 0-500+rnd(1000)
+			if ObjectLineClear( $Creature.Object#, object position x($Creature.Object#)+$null1, object position y($Creature.Object#), object position z($Creature.Object#)+$null2 ) = 1
+				$Creature.Dest.X# = object position x($Creature.Object#) + $null1
+				$Creature.Dest.Y# = object position y($Creature.Object#)
+				$Creature.Dest.Z# = object position z($Creature.Object#) + $null2
+			endif
+		endif
+	else
+		RotateObjectToPoint $Creature.Object#, $Creature.Dest.X#, object position y($Creature.Object#), $Creature.Dest.Z#, 5
+		if PointingToPosition($Creature.Object#, $Creature.Dest.X#, object position y($Creature.Object#), $Creature.Dest.Z#, 30) = 1		
+			Move Object $Creature.Object#, $Creature.Speed#
+		endif
+	endif
+	
+	`Gravity and water/land effects
+		if object position y($Creature.Object#) > $Water.Level + 10
+			position object $Creature.Object#,object position x($Creature.Object#),object position y($Creature.Object#) - 5,object position z($Creature.Object#)
+		else
+			if object position y($Creature.Object#) < $Water.Level + 2
+				position object $Creature.Object#,object position x($Creature.Object#),object position y($Creature.Object#) + 1,object position z($Creature.Object#)
+			endif
+		endif
+	
+	RunCollision $Creature.Object#
+	
+	`update sprite
+	position object $Creature.Sprite#, object position x($Creature.Object#), object position y($Creature.Object#), object position z($Creature.Object#)
+	point object $Creature.Sprite#, camera position x(), camera position y(), camera position z()
+	
+</lscript>
+
+
+<escript>
+		Delete Object $Creature.Object#
+		Delete Object $Creature.Sprite#
+</escript>

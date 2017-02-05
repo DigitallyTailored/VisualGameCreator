@@ -1,0 +1,26 @@
+<iscript>
+$water.object = makeplain(70000)
+$water.level = object position y($water.object)
+xrotate object $water.object, 270
+$water.image = loadimage("data\obj\water\water perspective.png")
+texture object $water.object, $water.image
+set object transparency $water.object, 3
+set object fog $water.object, 0
+set object alpha $water.object, 20
+set object zwrite $water.object, 0
+
+$water.reflection = makeplain(130000)
+xrotate object $water.reflection, 270
+set object reflection $water.reflection, 1
+</iscript>
+
+<lscript>
+yrotate object $water.object, object angle y($water.object)+delta(0.02)
+position object $water.object, camera position x(), $water.level, camera position z()
+position object $water.reflection, camera position x(), $water.level-10, camera position z()
+</lscript>
+
+<escript>
+delete object $water.object
+delete object $water.reflection
+</escript>

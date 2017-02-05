@@ -1,0 +1,10 @@
+fix pack display bug
+double click to click select packs
+
+Add + button to entity editor to reload entity without losing changes to code
+add save button to entity editor to allow for saving of modified entites. Opens save dialog.
+
+Fix save bug that only saves entity position when making a final
+Fix potential load bug that seems to load entities in the wrong position. XYZ messup?
+Allow for moving of selected entities
+New entity is immediately selected by default

@@ -1,0 +1,91 @@
+function runpackselector()
+	
+	setgadgetvisible packs.win, 1
+	
+	for a = 0 to getlistviewitemcount(packs.aplist)
+		removelistViewItem packs.aplist, 0
+	next a
+	
+	for a = 0 to getlistviewitemcount(packs.splist)
+		removelistViewItem packs.splist, 0
+	next a
+	
+	`create list of packs
+	set dir main_dir$ + "\packs"
+	local name as string
+	perform checklist for files
+	count=checklist quantity()
+	`message "files found", str$(count)
+	for i=1 to count
+		name=checklist string$(i)
+		`message "file found - name", name
+		if (name <> ".") and (name <> "..")
+			isFolder=checklist value a(i)
+			if isFolder=1
+				`message "file found - folder?", str$(isFolder)
+				if lower$(name) <> "current"
+					`message "file added", name
+					addlistViewItem packs.aplist, name, 0
+				endif
+			endif
+		endif
+	next i
+	
+	do
+		getevent
+		
+		if eventtype() = MOUSE_CLICK
+			
+			//if eventSource() = packs.aplist
+				//message getListViewItemText(packs.aplist, selectedListViewItem(packs.aplist), 0)
+			//endif
+			
+			if eventSource() = packs.addbtn
+				if selectedListViewItem(packs.aplist) > -1
+					n_item$ = getListViewItemText(packs.aplist, selectedListViewItem(packs.aplist), 0)
+					h_item = 0
+					for a = 0 to getListViewItemcount(packs.aplist)
+						if getListViewItemText(packs.splist, a, 0) = n_item$
+							h_item = 1
+							exit
+						endif
+					next a
+					if h_item = 0
+						addlistviewitem packs.splist, n_item$  , 0
+						selectListViewItem packs.aplist, -1
+					endif
+				endif
+			endif
+			
+			if eventSource() = packs.rembtn
+				if selectedListViewItem(packs.splist) > -1
+					removelistviewitem packs.splist, selectedListViewItem(packs.splist)
+				endif
+			endif
+			
+			if eventSource() = packs.okbtn
+				delete directory "current"
+				for a = 0 to getListViewItemcount(packs.splist)-1
+					if getListViewItemText(packs.splist, a, 0) <> ""
+						`message "copying: packs\" + getListViewItemText(packs.splist, a, 0)
+						copy_dir( get dir$()+"\"+getListViewItemText(packs.splist, a, 0), get dir$()+"\current")
+						set dir Main_Dir$ + "\packs"
+					endif
+					`message "pack " + str$(a), getListViewItemText(packs.splist, a, 0)
+				next a
+				`update entity tree
+				removeTreeViewItem tv_main, 0
+				`if file exist("current\entities")
+					PopulateTreeView(tv_main,"current\entities", 0)
+				`endif
+				exit
+			endif
+			
+		endif
+		
+	loop
+	
+	set dir Main_Dir$
+	setgadgetvisible packs.win, 0
+	
+endfunction

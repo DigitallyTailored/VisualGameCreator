@@ -1,0 +1,154 @@
+Rem ***** Included Source File *****
+function runMenu()
+	//handle menu
+	if eventtype() = MENU_CLICK
+		select eventData() 
+			case 2
+				//new
+				runpackselector()
+				newScene()
+				set dir Main_Dir$ + "\packs\current"
+			endcase
+			case 3
+				//open
+				new_file$=openDialog("Open VGC Map File","VGC Map Files (*.amp)|*.amp|All Files (*.*)|*.*")
+				if new_file$ <> ""
+					map_file$ = new_file$
+					open to read 1, map_file$
+					repeat
+						read string 1, stri$
+						if left$(stri$, 7) = "entpos,"
+							Default_X# = val(cutparse(2, ",", stri$))
+							Default_Y# = val(cutparse(3, ",", stri$))
+							Default_Z# = val(cutparse(4, ",", stri$))
+							
+							//message str$(Default_X#)+" - " + str$(Default_Y#)+" - " + str$(Default_Z#)
+						else
+							if left$(stri$, 7) = "entrot,"
+								Default_Xa# = val(cutparse(2, ",", stri$))
+								Default_Ya# = val(cutparse(3, ",", stri$))
+								Default_Za# = val(cutparse(4, ",", stri$))
+							else
+								if stri$ = "</entity>"
+									add_scg("", f_str$)
+									f_str$ = ""
+								else
+									f_str$ = f_str$ + stri$ + chr$(13) + chr$(10)
+								endif
+							endif
+						endif
+						
+						
+					until file end(1)
+					close file 1
+				endif
+			endcase
+			case 4
+				//save
+				if map_file$ = ""
+					map_file$=saveDialog("Save VGC Map File","VGC Map Files (*.amp)|*.amp|All Files (*.*)|*.*")
+				endif	
+				if map_file$ <> ""
+					if file exist(map_file$) then delete file map_file$
+					open to write 1, map_file$
+					for a = 1 to scg_cnt
+						if scg(a).script <> ""
+							write string 1, "<entity>"
+							write string 1, "entpos"+","+str$(scg(a).x)+","+str$(scg(a).y)+","+str$(scg(a).z)
+							write string 1, "entrot"+","+str$(scg(a).xa)+","+str$(scg(a).ya)+","+str$(scg(a).za)
+							write string 1, "entsiz,100"
+							//function in functions file, needs to be made - then fix gadget string saving
+							write_string(scg(a).script, 1)
+							write string 1, "</entity>"
+						endif
+					next a
+					close file 1
+				endif
+			endcase
+			case 5
+				//save as
+				map_file$=saveDialog("Save VGC Map File","VGC Map Files (*.amp)|*.amp|All Files (*.*)|*.*")
+				if file exist(map_file$) then delete file map_file$
+				open to write 1, map_file$
+				for a = 1 to scg_cnt
+						if scg(a).script <> ""
+							write string 1, "<entity>"
+							write string 1, "entpos"+","+str$(scg(a).x)+","+str$(scg(a).y)+","+str$(scg(a).z)
+							write string 1, "entrot"+","+str$(scg(a).xa)+","+str$(scg(a).ya)+","+str$(scg(a).za)
+							write string 1, "entsiz,100"
+							//function in functions file, needs to be made - then fix gadget string saving
+							write_string(scg(a).script, 1)
+							write string 1, "</entity>"
+						endif
+					next a
+				close file 1
+			endcase
+			case 6
+				//close
+				end
+			endcase
+			
+			
+			case 27
+				//reset camera
+				position camera 0,1000,0
+				point camera 500, 0, 500
+			endcase
+			
+			case 110
+				//make final
+				//grab target dir
+				if map_file$ = ""
+					map_file$=saveDialog("Save VGC File - 'main.amp' for default","VGC Map Files (*.amp)|*.amp|All Files (*.*)|*.*")
+					if right$(map_file$, 4) <> ".amp"
+						map_file$ = map_file$ + ".amp"
+					endif
+				endif	
+				if map_file$ <> ""
+					if file exist(map_file$) then delete file map_file$
+					
+					setStatusText status_bar, 1, "Saving map... (..." + right$(map_file$, 15) +") 1/5"
+					open to write 1, map_file$
+					for a = 1 to scg_cnt
+						if scg(a).script <> ""
+							write string 1, "<entity>"
+							write string 1, "entpos"+","+str$(scg(a).x)+","+str$(scg(a).y)+","+str$(scg(a).z)
+							write string 1, "entrot"+","+str$(scg(a).xa)+","+str$(scg(a).ya)+","+str$(scg(a).za)
+							write string 1, "entsiz,100"
+							//function in functions file, needs to be made - then fix gadget string saving
+							write_string(scg(a).script, 1)
+							write string 1, "</entity>"
+						endif
+					next a
+					close file 1
+					
+					
+					//copy data directory
+					setStatusText status_bar, 1, "Copying contents of data directory... 2/5"
+					copy_dir(Main_Dir$ + "\packs\current\data", grab_dir(map_file$)+"\data")
+					
+					//copy over engine
+					setStatusText status_bar, 1, "Copying contents of system directory... 3/5"
+					copy_dir(Main_Dir$+"\system", grab_dir(map_file$))
+					
+					//copy main script if one is there
+					if file exist(Main_Dir$ + "\packs\current\main.script")
+						//making sure there is one, otherwise it will use the default script
+						setStatusText status_bar, 1, "Copying over main script... 4/5"
+						if file exist(grab_dir(map_file$)+"\main.script") then delete file grab_dir(map_file$)+"\main.script"
+						copy file Main_Dir$ + "\packs\current\main.script", grab_dir(map_file$)+"\main.script"
+					else
+						setStatusText status_bar, 1, "No main script found, using default. 4/5"
+					endif
+					
+					//open up final/project dir
+					setStatusText status_bar, 1, "Opening project folder... 5/5"
+					execute file "", "", grab_dir(map_file$)
+					
+					setStatusText status_bar, 1, "Project final created."
+					
+				endif
+			endcase
+		endselect
+	endif
+endfunction

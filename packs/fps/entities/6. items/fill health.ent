@@ -1,0 +1,23 @@
+<iscript>
+	$item.health.fill# = makecube(30)
+	move object up $item.health.fill#, 25
+</iscript>
+
+<lscript>
+	if $item.health.fill# > 0
+		yrotate object $item.health.fill#, object angle y($item.health.fill#) + delta(1)
+		if $player.object > 0
+			if objectswithinrange($item.health.fill#, $player.object, 100) = 1
+				$player.health = $player.mhealth
+				delete object $item.health.fill#
+				$item.health.fill# = 0
+			endif
+		endif
+	endif
+</lscript>
+
+<escript>
+	if $item.health.fill# > 0
+		delete object $item.health.fill#
+	endif
+</escript>

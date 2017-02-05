@@ -1,0 +1,12 @@
+<iscript>
+$object.building# = loadobject("data\obj\building\small fort\small fort1.dbo")
+set object collision $object.building#, 1
+</iscript>
+
+<lscript>
+
+</lscript>
+
+<escript>
+delete object $object.building#
+</escript>

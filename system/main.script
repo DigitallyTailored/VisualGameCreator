@@ -1,0 +1,32 @@
+backdrop on
+sync on
+sync rate 60
+
+color fog rgb(28, 73, 140)
+set camera range 10, 48000
+fog distance 48000
+ambient light 50
+
+load agm level "main.amp"
+set bba 3
+set bbb 15
+
+setmaindir
+
+runiscript
+agm distance load
+update delta
+
+do
+	update delta
+
+	agm distance load
+	
+	runlscript
+	
+	mcc(delta(15))
+	
+	sync
+loop
+
+end

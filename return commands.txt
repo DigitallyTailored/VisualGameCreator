@@ -1,0 +1,134 @@
+
+
+---Math
+Rnd( INT ) : Will return a random number between 0 and the given number, including 0 and the given number in the calculation.
+Rgb ( INT, INT, INT ) : Will convert the given red, green and blue values into one value, for use with commands like fog color.
+Delta( INT/FLOAT ) : Will return the delta value of the given number. This can be used in conjunction with Updatedelta to ensure that objects or other entities are moved at the same speed, regardless of the FPS.
+
+
+---Variable commands
+var_switch_flag VAR : Will return the switched flag of the given variable.
+var_min VAR, INT : will return the corrected value of the given variable based on the minimum number.
+var_max VAR, INT : will return the corrected value of the given variable based on the maximum number.
+get_dat( STRING ) : Will return the data stored under the given name.
+
+
+
+---System
+Timer$() : Will return the computers internal system time.
+Screen fps() : Will return the current ammount of frames per second.
+
+--GUI
+MakeWindow( INT, INT, INT, INT, STRING ) : Will return the number of the GUI window made by giving this function the desired xpos, ypos, xsize, ysize and content.
+MakePanel( INT, INT, INT, INT, INT) : Will return the number of the GUI panel made by giving this function the desired xpos, ypos, xsize, ysize and handle.
+MakeLabel( INT, INT, INT, INT, STRING, INT) : Will return the number of the GUI label made by giving this function the desired xpos, ypos, xsize, ysize, content and handle.
+MakeButton( INT, INT, INT, INT, STRING, INT) : Will return the number of the GUI button made by giving this function the desired xpos, ypos, xsize, ysize, content and handle.
+MakeTextBox( INT, INT, INT, INT, STRING, INT) : Will return the number of the GUI TextBox made by giving this function the desired xpos, ypos, xsize, ysize, content and handle.
+GUIGetX( INT ) : Will return the X position of the given GUI function.
+GUIGetY( INT ) : Will return the Y position of the given GUI function.
+GUIGetXSize( INT ) : Will return the X size of the given GUI function.
+GUIGetYSize( INT ) : Will return the Y size of the given GUI function.
+GUIGetText( INT ) : Will return the text held by the given GUI function.
+
+
+--Screen
+Screen X() : will return the current screen or window width.
+Screen Y() : will return the current screen or window height.
+
+
+---File
+File read( STRING ) : Will open the specified file for reading and return the number of the file.
+File write( STRING ) : Will open the specified file for writing and return the number of the file.
+File exist( STRING ) : Will return a 1 if the specified exists.
+Read file( INT ) : Will return a line from the specified open file.
+
+
+---3D
+
+--Camera
+Camera position x() : Will return the current position of the camera on the x axis.
+Camera position y() : Will return the current position of the camera on the y axis.
+Camera position z() : Will return the current position of the camera on the z axis.
+Camera angle x() : Will return the current angle of the camera on the x axis.
+Camera angle y() : Will return the current angle of the camera on the y axis.
+Camera angle z() : Will return the current angle of the camera on the z axis.
+
+--Object
+Loadobject( STRING ) : Will load the specified object into memory and return its number.
+Makebox( FLOAT, FLOAT, FLOAT ) : Will create a box using the given xyz values as size data and return its number.
+Makecube( FLOAT ) : Will create a cube using the given vale as size data and return its number.
+Makesphere( FLOAT ) : Will create a sphere using the given value as size data and return its number.
+Makeplain( FLOAT ) : Will create a plain using the given value as size data and return its number.
+Object position x( INT ) : Will return the current position of the specified object on the x axis.
+Object position y( INT ) : Will return the current position of the specified object on the y axis.
+Object position z( INT ) : Will return the current position of the specified object on the z axis.
+Object angle x( INT ) : Will return the current angle of the specified object on the x axis.
+Object angle y( INT ) : Will return the current angle of the specified object on the y axis.
+Object angle z( INT ) : Will return the current angle of the specified object on the z axis.
+Object screen x( INT ) : Will return the current position of the specified objects on the screens x axis.
+Object screen y( INT ) : Will return the current position of the specified objects on the screens y axis.
+Object collision( INT, INT ) : Will return a 1 if the specified objects are colliding with eachother.
+Objectundermouse() : Will return the number of the object currently undereath the cursor.
+Returnxintersections( INT ) : Will calculate the collision for the given object on the x axis and reposition it accordingly. Will then return the value that the object has been moved by on the x axis.
+Returnyintersections( INT ) : Will calculate the collision for the given object on the y axis and reposition it accordingly. Will then return the value that the object has been moved by on the y axis.
+Returnzintersections( INT ) : Will calculate the collision for the given object on the z axis and reposition it accordingly. Will then return the value that the object has been moved by on the z axis.
+Returnxcollisionslide() : Will return the slide data for the last collision or intersection on the x axis.
+Returnycollisionslide() : Will return the slide data for the last collision or intersection on the y axis.
+Returnzcollisionslide() : Will return the slide data for the last collision or intersection on the z axis.
+Returnxcollisionnormal() : Will return the normal position for the last collision or intersection on the x axis.
+Returnycollisionnormal() : Will return the normal position for the last collision or intersection on the y axis.
+Returnzcollisionnormal() : Will return the normal position for the last collision or intersection on the z axis.
+Returnxcollisionposition() : Will return the position for the last collision or intersection on the x axis.
+Returnycollisionposition() : Will return the position for the last collision or intersection on the y axis.
+Returnzcollisionposition() : Will return the position for the last collision or intersection on the z axis.
+Lineclear( FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT ) : Will check if the line from the given xyz to the second given xyz is blocked.  If the line is blocked then a 0 is return, otherwise a 1 is returned.
+Objectlineclear( INT, FLOAT, FLOAT, FLOAT ) : Will check if the line from the given object to the given xyz position is blocked.  If the line is blocked then a 0 is return, otherwise a 1 is returned.
+Objectslineclear( INT, INT ) : Will check if the line from the given object to the second given object is blocked.  If the line is blocked then a 0 is return, otherwise a 1 is returned.
+Withinrange( FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT ) : Will return a 1 if the the given xyz position is within the second xyz positions range. The range to check for is the last float given.
+Objectwithinrange( INT, FLOAT, FLOAT, FLOAT, FLOAT ) : Will check if the given object is within range of the given xyz position. The range to check for is the last float given.
+Objectswithinrange( INT, INT, FLOAT ) : Will check if the given object is within range of the second given object by the range given. The range to check for is the last float given.
+Distance(FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT) : Will return the distance from the first given xyz coordinates to the second.
+Objectdistance(INT, FLOAT, FLOAT, FLOAT) : Will return the distance from the object to the given xyz coordinates.
+Objectsdistance(INT, INT) : Will return the distance between the two given objects.
+Pointingtoposition( INT, FLOAT, FLOAT, FLOAT, FLOAT ) : Will check if the given object is pointing towards the given xyz position by a certain angle range. The angle range to check for is the last float given.
+
+
+
+---2D
+
+--Text
+asc( STRING ) : Will return the ascii number for the provided letter. If more than one letter is given, then the ascii number for the first letter will be returned.
+chr$( INT ) : Will return the charater that the given ascii number represents.
+Mid$( STRING, INT ) : Will return the the selected character from the given string.
+Left$( STRING, INT ) : Will return the charaters from the left of the string up to the one specified.
+Right$( STRING, INT ) : Will return the charaters from the right of the string up to the one specified.
+Len( STRING ) : Will return the length of the given string.
+
+--Image
+Loadimage( STRING ) : Will load the specified image into memory and return its number.
+LoadimageSection( STRING, INT, INT, INT, INT ) : Will load the specified area of the given image into memory and return its number.
+CutimageSection( INT, INT, INT, INT, INT ) : Will cut the specified area of the given image number into memory and return its number.
+
+---Sound
+Loadsound( STRING ) : Will load the specified sound into memory and return its number.
+
+
+---Music
+Loadmusic( STRING ) : Will load the specified music into memory and return its number.
+
+
+---Input
+keystate( INT ) : Will return a 1 if the key for the given number is being pressed.
+scancode() : Will return the current keystate or key being pressed.
+mouseclick( INT ) : Will return a 1 if the given mouse button is being pressed.
+Mousex() : will return the position of the mouse on the screens 2D x axis.
+Mousey() : will return the position of the mouse on the screens 2D y axis.
+Mousemovex() : Will return the distance that the mouse has moved on the screens x axis since this command was last called.
+Mousemovey() : Will return the distance that the mouse has moved on the screens y axis since this command was last called.
+
+
+--Client/Server
+Net_Connect STRING : Will connect to the given IP address. This should be the address of the server.
+Net_Message_Type : Will return the current message type.
+Net_Message_String : Will return the current message string.
+Net_Message_Float : Will return the current message float.
