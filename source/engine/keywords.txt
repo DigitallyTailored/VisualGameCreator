@@ -1,0 +1,196 @@
+if
+else
+endif
+do
+loop
+for
+next
+end
+exit
+function
+endfunction
+rnd
+rgb
+update delta
+delta
+var_switch_flag
+var_min
+var_max
+timer$
+screen fps
+makewindow
+makepanel
+makelabel
+makebutton
+maketextbox
+guigetx
+guigety
+guigetxsize
+guigetysize
+screen x
+screen y
+setmaindir
+file read
+file write
+file exist
+read file
+camera position x
+camera position y
+camera position z
+camera angle x
+camera angle y
+camera angle z
+loadobject
+makebox
+makesphere
+makeplain
+object position x
+object position y
+object position z
+object angle x
+object angle y
+object angle z
+object screen x
+object screen y
+objectundermouse
+returnxintersections
+returnyintersections
+returnzintersections
+returnxcollisionslide
+returnycollisionslide
+returnzcollisionslide
+returnxcollisionposition
+returnycollisionposition
+returnzcollisionposition
+lineclear
+objectlineclear
+objectslineclear
+withinrange
+objectwithinrange
+distance
+objectdistance
+objectsdistance
+pointingtoposition
+ask
+chr$
+mid$
+left$
+right$
+len
+loadimage
+loadimageselection
+cutimagesection
+loadsound
+loadmusic
+keystate
+mouseclick
+mousex
+mousey
+mousemovex
+mousemovey
+net_connect
+net_message_type
+net_message_string
+net_message_float
+
+add
+sub
+dim
+undim
+message
+runiscript
+runlscript
+runescript
+updatedelta
+sleep
+guidelete
+guisettext
+guisetx
+guisety
+guisetxsize
+guisetysize
+set screen
+write file
+delete file
+sync on
+sync off
+sync rate
+sync
+set agm load distance
+set bba
+set bbb
+agm distance load
+load agm level
+mcc
+position camera
+move camera
+xrotate camera
+yrotate camera
+zrotate camera
+turn camera left
+turn camera right
+rotate camera
+point camera
+set camera range
+backdrop on
+backdrop off
+color backdrop
+colour backdrop
+fog on
+fog off
+fog distance
+color fog
+delete object
+set build position
+set build rotation
+position object
+move object
+move object left
+move object right
+move object up
+move object down
+xrotate object
+yrotate object
+zrotate object
+turn object left
+turn object right
+rotate object
+rotateobjecttopoint
+point object
+play object
+loop object
+stop object
+set object frame
+set object speed
+set object visible
+set object collision
+runcollision
+runxintersections
+runyintersections
+runzintersections
+runspherecollision
+print
+set cursor
+text
+position mouse
+set mouse visible
+draw box
+draw line
+draw dot
+delete image
+draw image
+delete sound
+play sound
+loop sound
+pause sound
+stop sound
+delete music
+play music
+loop music
+pause music
+stop music
+net_update
+net_send_string
+net_sent_position_xy_y
+net_sent_position_xyz_y
+net_sent_position_xyz_xyz

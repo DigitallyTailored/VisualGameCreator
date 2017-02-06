@@ -1,0 +1,966 @@
+Function loadScene(Level_File as string)
+	
+	Erase_Level()
+	
+	if file exist(Level_File)
+		
+		currentSceneName = Level_File
+		sceneToLoad = ""
+		
+		open to read 1, Level_File
+		repeat
+			read string 1, NewLine$
+			if NewLine$ = "<mdl>"
+			repeat
+			read string 1,NewLine$
+			
+			`object properties
+			if CutParse(1,",",NewLine$)="mdl"
+				
+				`Get a space for the object
+					if highestObjectNumber > 0
+						i = 0
+						for a = 1 to highestObjectNumber
+							if sceneObject(a).fpath = ""
+								i = a
+								exit
+							endif
+						next a
+					endif
+					
+					if i = 0
+						inc highestObjectNumber
+						dim sceneObject(highestObjectNumber) as objectDataValues
+						i=highestObjectNumber
+					endif
+					
+					obj = i
+					
+				sceneObject(obj).fpath = CutParse(2,",",NewLine$)
+			endif
+			
+			
+			if CutParse(1,",",NewLine$)="mdlpos"
+				sceneObject(Obj).X=val(CutParse(2,",",NewLine$))
+				sceneObject(Obj).Y=val(CutParse(3,",",NewLine$))
+				sceneObject(Obj).Z=val(CutParse(4,",",NewLine$))
+			endif
+			
+			if CutParse(1,",",NewLine$)="mdlrot"
+				sceneObject(Obj).Xa=val(CutParse(2,",",NewLine$))
+				sceneObject(Obj).Ya=val(CutParse(3,",",NewLine$))
+				sceneObject(Obj).Za=val(CutParse(4,",",NewLine$))
+			endif
+			
+			if CutParse(1,",",NewLine$)="mdlsiz"
+				sceneObject(Obj).Size=val(CutParse(2,",",NewLine$))
+			endif
+			
+			if CutParse(1,",",NewLine$)="<ent>"
+			Object_Entity as string
+			Object_Entity = ""
+			repeat
+			read string 1, dump$
+			if dump$ = "</ent>" = 0
+			if dump$ = "<ent>" = 0
+				if Object_Entity <> ""
+					Object_Entity = Object_Entity+chr$(13)+chr$(10)+dump$
+				else
+					Object_Entity = dump$
+				endif
+			endif
+			endif
+			until dump$ = "</ent>" or file end(1)
+			endif
+			until NewLine$ = "</mdl>"
+			
+			`calculate entity data
+			if sceneObject(obj).fpath <> ""
+				if Object_Entity <> ""
+					for a = 0 to StringLineCount(Object_Entity)
+						String_ch1$ = CutParse(1,"=",CutParse(a,chr$(10),Object_Entity))
+						String_ch2$ = CutParse(2,"=",CutParse(a,chr$(10),Object_Entity))
+						
+						if left$(String_ch1$,1) = "$"
+							`StrInsertEntry(String_ch1$,String_ch2$)
+						else
+							if String_ch1$ = "collision"
+								sceneObject(Obj).collision = int(val(String_ch2$))
+							else
+							if String_ch1$ = "transparency"
+								sceneObject(Obj).transparency = int(val(String_ch2$))
+							else
+							if String_ch1$ = "ghost"
+								sceneObject(Obj).ghost = int(val(String_ch2$))
+							else
+							if String_ch1$ = "fade"
+								sceneObject(Obj).fade = int(val(String_ch2$))
+							else
+							if String_ch1$ = "id"
+								sceneObject(Obj).id = String_ch2$
+							else
+							if String_ch1$ = "detail"
+								sceneObject(Obj).detail = String_ch2$
+							else
+							if String_ch1$ = "billboarding"
+								sceneObject(Obj).billboarding = int(val(String_ch2$))
+							endif
+							endif
+							endif
+							endif	
+							endif
+							endif
+							endif
+						endif
+						
+					next a
+				endif
+			endif
+			
+			endif
+			
+			
+			`**************************	Entity Stripper	**************************
+			if NewLine$ = "<entity>"
+				inc entityCount
+				dx# = 0:dy# = 0:dz# = 0:dxa# = 0:dya# = 0:dza# = 0
+				repeat
+					read string 1, NewLine$
+					
+					if left$(NewLine$,6) = "entid="
+						`Check entity id; Stick light here
+					endif
+					
+					if left$(NewLine$,7) = "entpos,"
+						dx# = val(CutParse(2,",",NewLine$))
+						dy# = val(CutParse(3,",",NewLine$))
+						dz# = val(CutParse(4,",",NewLine$))
+					endif
+					
+					if left$(NewLine$,7) = "entrot,"
+						dxa# = val(CutParse(2,",",NewLine$))
+						dya# = val(CutParse(3,",",NewLine$))
+						dza# = val(CutParse(4,",",NewLine$))
+					endif
+					
+					if NewLine$ = "<iscript>"
+						Code_Mode = IScript
+						Scan_Line("set build position "+str$(dx#)+","+str$(dy#)+","+str$(dz#))
+						Scan_Line("set build rotation "+str$(dxa#)+","+str$(dya#)+","+str$(dza#))
+						do
+							read string 1, NewLine$
+							if NewLine$ = "</iscript>"
+								exit
+							else
+								Scan_Line(NewLine$)
+							endif
+						loop
+						Code_Mode = MScript
+					endif
+					
+					if NewLine$ = "<lscript>"
+						Code_Mode = LScript
+						do
+							read string 1, NewLine$
+							if NewLine$ = "</lscript>"
+								exit
+							else
+								Scan_Line(NewLine$)
+							endif
+						loop
+						Code_Mode = MScript
+					endif
+					
+					if NewLine$ = "<escript>"
+						Code_Mode = EScript
+						do
+							read string 1, NewLine$
+							if NewLine$ = "</escript>"
+								exit
+							else
+								Scan_Line(NewLine$)
+							endif
+						loop
+						Code_Mode = MScript
+					endif
+					
+				until NewLine$ = "</entity>"
+				
+			endif
+			
+		until file end(1)
+		close file 1
+		
+		`-**************************	 Plugin Reader	  **************************
+			`scan the plugins folder for .agp plugins
+			set dir mediaDirectory
+			if path exist("data\plugins")	
+				set dir "data\plugins"
+				find first
+				repeat
+					if GET FILE TYPE() = 0
+						`a file
+						if lower$(right$(get file name$(), 4)) = ".agp"
+							`a plugin
+							open to read 2, get file name$()
+							inc entityCount
+							repeat
+								read string 2, NewLine$
+															
+								if NewLine$ = "<iscript>"
+									Code_Mode = IScript
+									do
+										read string 2, NewLine$
+										if NewLine$ = "</iscript>"
+											exit
+										else
+											Scan_Line(NewLine$)
+										endif
+									loop
+									Code_Mode = MScript
+								endif
+								
+								if NewLine$ = "<lscript>"
+									Code_Mode = LScript
+									do
+										read string 2, NewLine$
+										if NewLine$ = "</lscript>"
+											exit
+										else
+											Scan_Line(NewLine$)
+										endif
+									loop
+									Code_Mode = MScript
+								endif
+								
+								if NewLine$ = "<escript>"
+									Code_Mode = EScript
+									do
+										read string 2, NewLine$
+										if NewLine$ = "</escript>"
+											exit
+										else
+											Scan_Line(NewLine$)
+										endif
+									loop
+									Code_Mode = MScript
+								endif
+								
+							until file end(2)
+							close file 2
+						endif
+					endif
+					find next
+				until GET FILE TYPE() = -1
+			
+			endif
+			if editing = 1
+				if mediaDirectory <> ""
+					set dir Main_Dir$ + "\packs\current"
+				endif
+			else
+				set dir Main_Dir$
+			endif
+			`**************************	Entity Stripper	**************************
+		
+		`Tie the loose ends
+		Code_Mode = IScript
+		Scan_Line("set build position 0,0,0")
+		Scan_Line("set build rotation 0,0,0")
+		Add_Code_Line("runmscript")
+		compile_prerun()
+		
+		Code_Mode = LScript
+		Add_Code_Line("runmscript")
+		compile_prerun()
+		
+		Code_Mode = EScript
+		Add_Code_Line("runmscript")
+		compile_prerun()
+		
+			else
+		message Application_Name$, "The selected level file does not exist."
+		end
+		endif
+			
+endfunction
+
+Function Erase_Level()
+	if highestObjectNumber > 0
+		for x = 1 to highestObjectNumber
+			if sceneObject(x).Object > 0
+				if object exist(sceneObject(x).Object)
+					delete object sceneObject(x).Object
+				endif
+			endif
+		next x
+	endif
+	
+	highestObjectNumber = 0
+	Dim sceneObject(highestObjectNumber) as objectDataValues
+	
+	currentSceneName = ""
+		
+endfunction
+
+`Object loading
+
+Function DistanceLoad()
+set dir mediaDirectory
+`Real Time Loading
+if top_sceneObject > 0
+for ab = 1 to top_sceneObject
+	if sceneObject(ab).fpath <> ""
+		
+		
+if sceneObject(ab).Billboarding = 0
+			`Not a billboardable object
+			if sceneObject(ab).object = 0
+				`object does not exist
+				if CameraWithinStoredObjectRange(ab,object_load_distance#*sceneObject(ab).Size) = 1
+					
+					if sceneObject(ab).collision > 0
+						sceneObject(ab).object=LoadCObject(sceneObject(ab).fpath)
+					else
+						sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+					endif
+					
+					position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+					rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+					
+					if sceneObject(ab).transparency > 0
+						set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+					endif
+					
+					if sceneObject(ab).ghost > 0
+						ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+					endif
+					
+					if sceneObject(ab).fade > 0
+						fade object sceneObject(ab).object,sceneObject(ab).fade
+					endif
+					
+					if sceneObject(ab).collision > 0
+						SC_UpdateObject sceneObject(ab).Object
+					endif
+					
+				endif
+			else
+				`object does exist
+				if CameraWithinRealObjectRange(ab,object_load_distance#*sceneObject(ab).Size) = 0
+					if ObjectExist(sceneObject(ab).object)
+						if sceneObject(ab).clone = 3 = 0
+							DeleteObject(sceneObject(ab).object)
+							sceneObject(ab).object=0
+						endif
+					endif
+				endif
+			endif
+					
+else
+			`A billboardable object
+			
+			if sceneObject(ab).object = 0
+			`object does not exist
+				if CameraWithinStoredObjectRange(ab,billboard_maximum#*sceneObject(ab).Size) = 1
+				`within maximum billboard range
+					if CameraWithinStoredObjectRange(ab,billboard_minimum#*sceneObject(ab).Size) = 1
+					`within minimum billboard range
+						
+						if sceneObject(ab).collision > 0
+							sceneObject(ab).object=LoadCObject(sceneObject(ab).fpath)
+						else
+							sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+						endif
+						
+						position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+						
+						rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+						
+						if sceneObject(ab).transparency > 0
+							set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+						endif
+						
+						if sceneObject(ab).ghost > 0
+							ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+						endif
+						
+						if sceneObject(ab).fade > 0
+							fade object sceneObject(ab).object,sceneObject(ab).fade
+						endif
+						
+						if sceneObject(ab).collision > 0
+							SC_UpdateObject sceneObject(ab).Object
+						endif
+						
+					else
+					`Outside minimum billboard range
+						sceneObject(ab).object=LoadObject(sceneObject(ab).fpath+"_bb.x")
+						
+						position object sceneObject(ab).Object, sceneObject(ab).X, sceneObject(ab).Y, sceneObject(ab).Z
+						
+						if sceneObject(ab).billboarding = 1
+							`yrotate object sceneObject(ab).Object, 180 : fix object pivot sceneObject(ab).Object
+							point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+						else
+							rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+						endif
+						sceneObject(ab).Billboardon = 1
+						
+						if sceneObject(ab).transparency > 0
+							`set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+							set object transparency sceneObject(ab).object, 3
+						endif
+						
+						if sceneObject(ab).ghost > 0
+							ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+						endif
+						
+						if sceneObject(ab).fade > 0
+							fade object sceneObject(ab).object,sceneObject(ab).fade
+						endif
+						
+					endif
+				endif
+			else
+			`object does exist
+				if CameraWithinStoredObjectRange(ab,billboard_maximum#*sceneObject(ab).Size) = 1
+				`within maximum billboard range
+					if CameraWithinStoredObjectRange(ab,billboard_minimum#*sceneObject(ab).Size) = 1
+					`within minimum billboard range
+						if sceneObject(ab).billboardon = 1
+							if sceneObject(ab).clone = 3 = 0
+								`not a master object
+								DeleteObject(sceneObject(ab).object)
+								if sceneObject(ab).collision > 0
+									sceneObject(ab).object=LoadCObject(sceneObject(ab).fpath)
+								else
+									sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+								endif
+								sceneObject(ab).Billboardon = 0
+								
+								position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+								
+								rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+								
+								if sceneObject(ab).transparency > 0
+									set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+								endif
+								
+								if sceneObject(ab).ghost > 0
+									ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+								endif
+								
+								if sceneObject(ab).fade > 0
+									fade object sceneObject(ab).object,sceneObject(ab).fade
+								endif
+								
+								if sceneObject(ab).collision > 0
+									SC_UpdateObject sceneObject(ab).Object
+								endif
+								
+							endif
+						endif
+					else
+					`Outside minimum billboard range
+						if sceneObject(ab).billboardon = 0
+							if sceneObject(ab).clone = 3 = 0
+								`not a master object
+								DeleteObject(sceneObject(ab).object)
+								sceneObject(ab).object=LoadObject(sceneObject(ab).fpath+"_bb.x")
+								sceneObject(ab).Billboardon = 1
+								
+								position object sceneObject(ab).Object, sceneObject(ab).X, sceneObject(ab).Y, sceneObject(ab).Z
+								
+								if sceneObject(ab).billboarding = 1
+									`yrotate object sceneObject(ab).Object, 180 : fix object pivot sceneObject(ab).Object
+									point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+								else
+									rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+								endif
+								
+								
+								if sceneObject(ab).transparency > 0
+									set object transparency sceneObject(ab).object,3
+								endif
+								
+								if sceneObject(ab).ghost > 0
+									ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+								endif
+								
+								if sceneObject(ab).fade > 0
+									fade object sceneObject(ab).object,sceneObject(ab).fade
+								endif
+								
+							endif
+							
+							`point to camera
+							if sceneObject(ab).billboarding = 1
+								point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+								`yrotate object sceneObject(ab).Object, object angle y(sceneObject(ab).Object)+180
+							endif
+						endif
+						`point to camera
+						if sceneObject(ab).billboarding = 1
+							point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+						`	yrotate object sceneObject(ab).Object, object angle y(sceneObject(ab).Object)+180
+						endif
+								
+					endif
+				else
+				`Outside maximum billboard range
+					if sceneObject(ab).clone = 3 = 0
+						`not a master object
+						DeleteObject(sceneObject(ab).object)
+					endif
+					sceneObject(ab).object = 0
+					sceneObject(ab).Billboardon = 0
+				endif
+			endif
+
+endif
+		
+		
+	endif
+next ab
+endif
+
+if editing = 1
+	if mediaDirectory <> ""
+		set dir Main_Dir$ + "\packs\current"
+	endif
+else
+	set dir Main_Dir$
+endif
+
+endfunction
+
+remstart
+Function DistanceLoad()
+set dir mediaDirectory
+`Real Time Loading
+if highestObjectNumber > 0
+for ab = 1 to highestObjectNumber
+	if sceneObject(ab).fpath <> ""
+		
+		
+if sceneObject(ab).Billboarding = 0
+			`Not a billboardable object
+			if sceneObject(ab).object = 0
+				`object does not exist
+				if CameraWithinStoredObjectRange(ab,drawDistance*sceneObject(ab).Size) = 1
+					
+					sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+					
+					position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+					rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+					
+					if sceneObject(ab).transparency > 0
+						set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+					endif
+					
+					if sceneObject(ab).ghost > 0
+						ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+					endif
+					
+					if sceneObject(ab).fade > 0
+						fade object sceneObject(ab).object,sceneObject(ab).fade
+					endif
+					
+					if sceneObject(ab).collision > 0
+						SC_UpdateObject sceneObject(ab).Object
+					else
+						SC_removeobject sceneObject(ab).Object
+					endif
+					
+				endif
+			else
+				`object does exist
+				if CameraWithinRealObjectRange(ab,drawDistance*sceneObject(ab).Size) = 0
+					if ObjectExist(sceneObject(ab).object)
+						if sceneObject(ab).clone = 3 = 0
+							DeleteObject(sceneObject(ab).object)
+							sceneObject(ab).object=0
+						endif
+					endif
+				endif
+			endif
+					
+else
+			`A billboardable object
+			
+			if sceneObject(ab).object = 0
+			`object does not exist
+				if CameraWithinStoredObjectRange(ab,BBb#*sceneObject(ab).Size) = 1
+				`within maximum billboard range
+					if CameraWithinStoredObjectRange(ab,BBa#*sceneObject(ab).Size) = 1
+					`within minimum billboard range
+						
+						sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+						
+						position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+						
+						rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+						
+						if sceneObject(ab).transparency > 0
+							set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+						endif
+						
+						if sceneObject(ab).ghost > 0
+							ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+						endif
+						
+						if sceneObject(ab).fade > 0
+							fade object sceneObject(ab).object,sceneObject(ab).fade
+						endif
+						
+						if sceneObject(ab).collision > 0
+							SC_UpdateObject sceneObject(ab).Object
+						else
+							SC_removeobject sceneObject(ab).Object
+						endif
+						
+					else
+					`Outside minimum billboard range
+						sceneObject(ab).object=LoadObject(sceneObject(ab).fpath+"_bb.x")
+						
+						position object sceneObject(ab).Object, sceneObject(ab).X, sceneObject(ab).Y, sceneObject(ab).Z
+						
+						if sceneObject(ab).billboarding = 1
+							`yrotate object sceneObject(ab).Object, 180 : fix object pivot sceneObject(ab).Object
+							point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+						else
+							rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+						endif
+						sceneObject(ab).Billboardon = 1
+						
+						if sceneObject(ab).transparency > 0
+							`set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+							set object transparency sceneObject(ab).object, 3
+						endif
+						
+						if sceneObject(ab).ghost > 0
+							ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+						endif
+						
+						if sceneObject(ab).fade > 0
+							fade object sceneObject(ab).object,sceneObject(ab).fade
+						endif
+						
+					endif
+				endif
+			else
+			`object does exist
+				if CameraWithinStoredObjectRange(ab,BBb#*sceneObject(ab).Size) = 1
+				`within maximum billboard range
+					if CameraWithinStoredObjectRange(ab,BBa#*sceneObject(ab).Size) = 1
+					`within minimum billboard range
+						if sceneObject(ab).billboardon = 1
+							if sceneObject(ab).clone = 3 = 0
+								`not a master object
+								DeleteObject(sceneObject(ab).object)
+								sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+								sceneObject(ab).Billboardon = 0
+								
+								position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+								
+								rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+								
+								if sceneObject(ab).transparency > 0
+									set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+								endif
+								
+								if sceneObject(ab).ghost > 0
+									ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+								endif
+								
+								if sceneObject(ab).fade > 0
+									fade object sceneObject(ab).object,sceneObject(ab).fade
+								endif
+								
+								if sceneObject(ab).collision > 0
+									SC_UpdateObject sceneObject(ab).Object
+								else
+									SC_removeobject sceneObject(ab).Object
+								endif
+								
+							endif
+						endif
+					else
+					`Outside minimum billboard range
+						if sceneObject(ab).billboardon = 0
+							if sceneObject(ab).clone = 3 = 0
+								`not a master object
+								DeleteObject(sceneObject(ab).object)
+								sceneObject(ab).object=LoadObject(sceneObject(ab).fpath+"_bb.x")
+								sceneObject(ab).Billboardon = 1
+								
+								position object sceneObject(ab).Object, sceneObject(ab).X, sceneObject(ab).Y, sceneObject(ab).Z
+								
+								if sceneObject(ab).billboarding = 1
+									`yrotate object sceneObject(ab).Object, 180 : fix object pivot sceneObject(ab).Object
+									point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+								else
+									rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+								endif
+								
+								
+								if sceneObject(ab).transparency > 0
+									set object transparency sceneObject(ab).object,3
+								endif
+								
+								if sceneObject(ab).ghost > 0
+									ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+								endif
+								
+								if sceneObject(ab).fade > 0
+									fade object sceneObject(ab).object,sceneObject(ab).fade
+								endif
+								
+							endif
+							
+							`point to camera
+							if sceneObject(ab).billboarding = 1
+								point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+								`yrotate object sceneObject(ab).Object, object angle y(sceneObject(ab).Object)+180
+							endif
+						endif
+						`point to camera
+						if sceneObject(ab).billboarding = 1
+							point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+						`	yrotate object sceneObject(ab).Object, object angle y(sceneObject(ab).Object)+180
+						endif
+								
+					endif
+				else
+				`Outside maximum billboard range
+					if sceneObject(ab).clone = 3 = 0
+						`not a master object
+						DeleteObject(sceneObject(ab).object)
+					endif
+					sceneObject(ab).object = 0
+					sceneObject(ab).Billboardon = 0
+				endif
+			endif
+
+endif
+		
+		
+	endif
+next ab
+endif
+`set dir Main_Dir$
+if editing = 1
+	if mediaDirectory <> ""
+		set dir Main_Dir$ + "\packs\current"
+	endif
+else
+	set dir Main_Dir$
+endif
+endfunction
+remend
+
+remstart
+`Object loading
+Function DistanceLoad()
+set dir mediaDirectory
+`Real Time Loading
+if highestObjectNumber > 0
+for ab = 1 to highestObjectNumber
+	if sceneObject(ab).fpath <> ""
+		
+		
+if sceneObject(ab).Billboarding = 0
+			`Not a billboardable object
+			if sceneObject(ab).object = 0
+				`object does not exist
+				if CameraWithinStoredObjectRange(ab,drawDistance*sceneObject(ab).Size) = 1
+					sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+					
+					position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+					rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+					
+					if sceneObject(ab).transparency > 0
+						set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+					endif
+					
+					if sceneObject(ab).ghost > 0
+						ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+					endif
+					
+					if sceneObject(ab).fade > 0
+						fade object sceneObject(ab).object,sceneObject(ab).fade
+					endif
+					
+					if sceneObject(ab).collision > 0
+						`collision tpyes can be set here
+						SC_UpdateObject sceneObject(ab).Object
+					else
+						SC_removeobject sceneObject(ab).Object
+						`SC_setObjectCollisionOff sceneObject(ab).Object
+					endif
+				endif
+			else
+				`object does exist
+				if CameraWithinRealObjectRange(ab,drawDistance*sceneObject(ab).Size) = 0
+					if ObjectExist(sceneObject(ab).object)
+						delete object sceneObject(ab).object
+						sceneObject(ab).object=0
+					endif
+				endif
+			endif
+					
+else
+			`A billboardable object
+			
+			if sceneObject(ab).object = 0
+			`object does not exist
+				if CameraWithinStoredObjectRange(ab,BBb#*sceneObject(ab).Size) = 1
+				`within maximum billboard range
+					if CameraWithinStoredObjectRange(ab,BBa#*sceneObject(ab).Size) = 1
+					`within minimum billboard range
+						sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+						
+						position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+						rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+						
+						if sceneObject(ab).transparency > 0
+							set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+						endif
+						
+						if sceneObject(ab).ghost > 0
+							ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+						endif
+						
+						if sceneObject(ab).fade > 0
+							fade object sceneObject(ab).object,sceneObject(ab).fade
+						endif
+						
+						if sceneObject(ab).collision > 0
+							`collision tpyes can be set here
+							SC_UpdateObject sceneObject(ab).Object
+						else
+							SC_removeobject sceneObject(ab).Object
+						endif
+					else
+					`Outside minimum billboard range
+						sceneObject(ab).object=LoadObject(sceneObject(ab).fpath+"_bb.x")
+						position object sceneObject(ab).Object, sceneObject(ab).X, sceneObject(ab).Y, sceneObject(ab).Z
+						if sceneObject(ab).billboarding = 1
+							yrotate object sceneObject(ab).Object, 180 : fix object pivot sceneObject(ab).Object
+							point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+						else
+							rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+						endif
+						sceneObject(ab).Billboardon = 1
+						
+						if sceneObject(ab).transparency > 0
+							set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+						endif
+						
+						if sceneObject(ab).ghost > 0
+							ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+						endif
+						
+						if sceneObject(ab).fade > 0
+							fade object sceneObject(ab).object,sceneObject(ab).fade
+						endif
+					endif
+				endif
+			else
+			`object does exist
+				if CameraWithinStoredObjectRange(ab,BBb#*sceneObject(ab).Size) = 1
+				`within maximum billboard range
+					if CameraWithinStoredObjectRange(ab,BBa#*sceneObject(ab).Size) = 1
+					`within minimum billboard range
+						if sceneObject(ab).billboardon = 1
+							delete object sceneObject(ab).object
+							sceneObject(ab).object = 0
+							sceneObject(ab).Billboardon = 0
+							
+							sceneObject(ab).object=LoadObject(sceneObject(ab).fpath)
+							
+							position object sceneObject(ab).object,sceneObject(ab).X,sceneObject(ab).Y,sceneObject(ab).Z
+							rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+							
+							if sceneObject(ab).transparency > 0
+								set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+							endif
+							
+							if sceneObject(ab).ghost > 0
+								ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+							endif
+							
+							if sceneObject(ab).fade > 0
+								fade object sceneObject(ab).object,sceneObject(ab).fade
+							endif
+							
+							if sceneObject(ab).collision > 0
+								`collision tpyes can be set here
+								SC_UpdateObject sceneObject(ab).Object
+							else
+								SC_removeobject sceneObject(ab).Object
+							endif
+						endif
+					else
+					`Outside minimum billboard range
+						if sceneObject(ab).billboardon = 0
+							delete object sceneObject(ab).object
+							sceneObject(ab).object = 0
+							sceneObject(ab).Billboardon = 1
+							
+							sceneObject(ab).object=LoadObject(sceneObject(ab).fpath+"_bb.x")
+							position object sceneObject(ab).Object, sceneObject(ab).X, sceneObject(ab).Y, sceneObject(ab).Z
+							if sceneObject(ab).billboarding = 1
+								yrotate object sceneObject(ab).Object, 180 : fix object pivot sceneObject(ab).Object
+								point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+							else
+								rotate object sceneObject(ab).object,sceneObject(ab).Xa,sceneObject(ab).Ya,sceneObject(ab).Za
+							endif
+							sceneObject(ab).Billboardon = 1
+							
+							if sceneObject(ab).transparency > 0
+								set object transparency sceneObject(ab).object,sceneObject(ab).transparency
+							endif
+							
+							if sceneObject(ab).ghost > 0
+								ghost object on sceneObject(ab).object,sceneObject(ab).ghost
+							endif
+							
+							if sceneObject(ab).fade > 0
+								fade object sceneObject(ab).object,sceneObject(ab).fade
+							endif
+						endif
+						
+						`point to camera
+						if sceneObject(ab).billboarding = 1
+							point object sceneObject(ab).object, camera position x(), camera position y(), camera position z()
+						endif
+						
+					endif
+				else
+				`Outside maximum billboard range
+					delete object sceneObject(ab).object
+					sceneObject(ab).object = 0
+					sceneObject(ab).Billboardon = 0
+				endif
+			endif
+
+endif
+		
+		
+	endif
+next ab
+endif
+set dir Main_Dir$
+endfunction
+remend
+function CameraWithinStoredObjectRange(Object1,Range#)
+	result#=(camera position x()-sceneObject(Object1).X)^2+(camera position y()-sceneObject(Object1).Y)^2+(camera position z()-sceneObject(Object1).Z)^2
+   if result# < (Range#^2) then within=1
+endfunction within
+
+function CameraWithinRealObjectRange(Object1,Range#)
+	result#=(camera position x()-object position x(sceneObject(Object1).Object))^2+(camera position y()-object position y(sceneObject(Object1).Object))^2+(camera position z()-object position z(sceneObject(Object1).Object))^2
+   if result# < (Range#^2) then within=1
+endfunction within

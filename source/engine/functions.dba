@@ -1,0 +1,2930 @@
+`Functions baby!
+
+Function Define_Line()
+		`message "defining line"
+	if Script_File$(Current_Line(Code_Mode), Code_Mode) = "if"
+			`is an if
+			if condition() = 1
+				`do
+					Run_True()
+					if returning_function_data = 1
+						exitfunction
+					endif
+				`loop
+			else
+				`do
+					Run_False()
+				`loop
+			endif
+		else
+			`is a command
+			Run_Command()
+		endif
+endfunction
+
+Function Run_True()
+	do
+		//message "on line " +str$(Current_Line(Code_Mode)) + " of code mode " + str$(Code_Mode) 
+		inc Current_Line(Code_Mode)
+		if Script_File$(Current_Line(Code_Mode), Code_Mode) = "if"
+			Define_Line()
+			if returning_function_data = 1
+				exitfunction
+			endif
+		else
+			if Script_File$(Current_Line(Code_Mode), Code_Mode) = "else"
+				Run_False()
+			else
+				if Script_File$(Current_Line(Code_Mode), Code_Mode) = "endif"
+					exitfunction
+				else
+					Run_Command()
+					if returning_function_data = 1
+						exitfunction
+					endif
+				endif
+			endif
+		endif
+		if sync_run = 1
+			exitfunction
+		endif
+	loop
+endfunction
+
+Function Run_False()
+	do
+		inc Current_Line(Code_Mode)
+		if Script_File$(Current_Line(Code_Mode), Code_Mode) = "if"
+			inc if_count
+		else
+			if Script_File$(Current_Line(Code_Mode), Code_Mode) = "else"
+				if if_count = 0
+					Run_True()
+					if returning_function_data = 1
+						exitfunction
+					endif
+				endif
+			endif
+			if Script_File$(Current_Line(Code_Mode), Code_Mode) = "endif"
+				if if_count = 0
+					exitfunction
+				else
+					dec if_count
+				endif
+			endif
+		endif
+		if sync_run = 1
+			exitfunction
+		endif
+	loop
+endfunction
+
+
+
+Function Run_Command()
+					
+	`Reset var data
+	bracketCount = 0
+	commandCount = 0
+	`commands
+		
+	select Script_File$(Current_Line(Code_Mode), Code_Mode)
+		
+		case "$"
+				inc Current_Line(Code_Mode), 2
+				variableData(int(val(Script_File$(Current_Line(Code_Mode)-1, Code_Mode)))) = Return_Variable()
+				exitfunction
+		endcase
+		case "@"
+			inc Current_Line(Code_Mode), 2
+			A_N$ = Script_File$(Current_Line(Code_Mode)-1, Code_Mode)
+			A_I = val(Return_Variable())
+			inc Current_Line(Code_Mode), 1
+			Add_Arr_Data(A_N$, A_I, Return_Variable())
+			exitfunction
+		endcase
+		case "do"
+				exitfunction
+		endcase
+		case "dim"
+			`make an array
+			inc Current_Line(Code_Mode)
+			Dim_Arr(Script_File$(Current_Line(Code_Mode), Code_Mode), val(Return_Variable()))
+			exitfunction
+		endcase
+		case "undim"
+			inc Current_Line(Code_Mode)
+			Undim_Arr(Script_File$(Current_Line(Code_Mode), Code_Mode))
+			exitfunction
+		endcase
+		case "add"
+   			inc Current_Line(Code_Mode), 3
+   			variableData(int(val(Script_File$(Current_Line(Code_Mode)-1, Code_Mode)))) = str$( val(variableData(int(val(Script_File$(Current_Line(Code_Mode)-1, Code_Mode))))) + val(Return_Variable()) )
+   			exitfunction
+		endcase
+   	case "sub"
+   			inc Current_Line(Code_Mode), 3
+   			variableData(int(val(Script_File$(Current_Line(Code_Mode)-1, Code_Mode)))) = str$( val(variableData(int(val(Script_File$(Current_Line(Code_Mode)-1, Code_Mode))))) - val(Return_Variable()) )
+   			exitfunction
+   	endcase
+		case "for"
+   			//message "entering for loop"
+   			inc Current_Line(Code_Mode), 2
+   			Var = int(val(Script_File$(Current_Line(Code_Mode), Code_Mode)))
+   			inc Current_Line(Code_Mode), 1
+   			`variableData(Var) = Script_File$(Current_Line(Code_Mode), Code_Mode)
+   			variableData(Var) = Return_Variable()
+   			`message "starting at: "+variableData(Var)
+   			inc Current_Line(Code_Mode), 1
+   			`F_T$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+   			`F_M = int(val(Script_File$(Current_Line(Code_Mode), Code_Mode))) + 1
+   			F_M = val(Return_Variable()) + 1
+   			`message "ending at: "+str$(F_M)
+   			F_Line = Current_Line(Code_Mode)+1
+   			if val(variableData(Var)) < F_M
+   				do
+	   				inc Current_Line(Code_Mode)
+						if Script_File$(Current_Line(Code_Mode), Code_Mode) = "next"
+							inc Current_Line(Code_Mode), 2
+							if int(val(Script_File$(Current_Line(Code_Mode), Code_Mode))) = Var
+								variableData(Var) = str$( val(variableData(Var)) + 1 )
+								if variableData(Var) = str$(F_M)
+									//message "leaving for loop"
+									exitfunction
+								else
+									Current_Line(Code_Mode) = F_Line
+								endif
+							endif
+						endif
+						Define_Line()
+						if returning_function_data = 1
+							exitfunction
+						endif
+   				loop
+   			endif
+   			exitfunction
+   	endcase
+   	
+   	case "set"
+			inc Current_Line(Code_Mode)
+			select Script_File$(Current_Line(Code_Mode), Code_Mode)
+				case "dir"
+					if safe_mode = 0
+						set dir Return_Variable()
+					else
+						set dir applicationDirectory+"/"+Return_Variable()
+					endif
+					exitfunction
+				endcase
+				case "text"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "size"
+							set text size val(Return_Variable())
+							exitfunction
+						endcase
+						case "font"
+							set text font Return_Variable()
+							exitfunction
+						endcase
+					endselect
+				endcase
+				case "cursor"
+					set cursor val(Return_Variable()), val(Return_Variable())
+					exitfunction
+				endcase
+				case "mouse"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "visible"
+							if val(Return_Variable()) = 0
+								mousehidden = 1
+								hide mouse
+								exitfunction
+							else
+								mousehidden = 0
+								show mouse
+								exitfunction
+							endif
+						endcase
+					endselect
+				endcase
+				case "object"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "reflection"
+							null = val(Return_Variable())
+							if val(Return_Variable()) = 0
+								set shading off null
+							else
+								set reflection shading on null
+							endif
+							exitfunction
+						endcase
+						case "ambience"
+							SET OBJECT ambience val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "ambient"
+							SET OBJECT ambient val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "specular"
+							set object specular val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "speculation"
+							set object specular power val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "fog"
+							set object fog val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "detail"
+							set detail mapping on val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "visible"
+							null = val(Return_Variable())
+							if val(Return_Variable()) = 0
+								hide object null
+							else
+								show object null
+							endif
+							exitfunction
+						endcase
+						case "transparency"
+							set object transparency val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "alpha"
+							set alpha mapping on val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "zwrite"
+							null = val(Return_Variable())
+							if val(Return_Variable()) = 0
+								enable object zwrite null
+							else
+								disable object zwrite null
+							endif
+							exitfunction
+						endcase
+						case "light"
+							set object light val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "color"
+							color object val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "colour"
+							color object val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "ghost"
+							obj = val(Return_Variable())
+							null = val(Return_Variable())
+							if null = 0
+								ghost object off obj
+							else
+								ghost object on obj, null
+							endif
+							exitfunction
+						endcase
+						case "fade"
+							fade object val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "frame"
+							set object frame val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "speed"
+							null = val(Return_Variable())
+							set object speed null, val(Return_Variable())
+							set object interpolation null, val(Return_Variable())
+							exitfunction
+						endcase
+						case "scale"
+							scale object val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable())
+							exitfunction
+						endcase
+						case "filter"
+							set object filter val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+						case "texture"
+							inc Current_Line(Code_Mode)
+							select Script_File$(Current_Line(Code_Mode), Code_Mode)
+								case "scale"
+									scale object texture val(Return_Variable()),val(Return_Variable()),val(Return_Variable())
+									exitfunction
+								endcase
+							endselect
+							dec Current_Line(Code_Mode)
+							texture object int(val(Return_Variable())), int(val(Return_Variable()))
+							exitfunction
+						endcase
+						case "collision"
+							object = val(Return_Variable())
+							coltype = val(Return_Variable())
+							if coltype = 0
+								if SC_CollisionStatus(object) = 1
+									SC_SetObjectCollisionOff object 
+								endif
+							else
+								if SC_CollisionStatus(object) = 0
+									SC_SetupComplexObject object, 0, 2
+									sc_updateobject object
+								endif
+							endif
+								exitfunction
+						endcase
+						case "effect"
+							set object effect val(Return_Variable()),val(Return_Variable())
+							exitfunction
+						endcase
+					endselect
+				endcase
+					
+				case "build"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "position"
+							Default_X# = val(Return_Variable())
+							Default_Y# = val(Return_Variable())
+							Default_Z# = val(Return_Variable())
+							exitfunction
+						endcase
+						case "rotation"
+							Default_Xa# = val(Return_Variable())
+							Default_Ya# = val(Return_Variable())
+							Default_Za# = val(Return_Variable())
+							exitfunction
+						endcase
+					endselect
+					
+				endcase
+					
+				case "bba"
+					BBa# = val(Return_Variable())
+					exitfunction
+				endcase
+					
+				case "bbb"
+					BBb# = val(Return_Variable())
+					exitfunction
+				endcase
+				
+				case "agm"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "load"
+							inc Current_Line(Code_Mode)
+							select Script_File$(Current_Line(Code_Mode), Code_Mode)
+								case "distance"
+									drawDistance = val(Return_Variable())
+									exitfunction
+								endcase
+							endselect
+						endcase
+					endselect
+				endcase
+					
+				case "camera"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "range"
+							set camera range val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endcase
+					endselect
+				endcase
+				case "screen"
+					set display mode val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), 1
+					f = val(Return_Variable())
+					select f
+						case 0
+							restore window
+						endcase
+						case 1
+							maximize window
+						endcase
+						case 2
+							set window off
+						endcase
+					endselect
+					exitfunction
+				endcase
+			endselect
+		endcase
+		
+		
+		case "mcc"
+				MouseControl(val(Return_Variable()))
+				exitfunction
+			endcase
+			
+			case "agm"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+				case "distance"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "load"
+						DistanceLoad()
+						exitfunction
+					endcase
+					endselect
+				endcase
+				endselect
+			endcase
+				
+			
+			
+				case "fog"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "distance"
+						fog distance val(Return_Variable())
+						exitfunction
+					endcase
+					endselect
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "on"
+							fog on
+							exitfunction
+					endcase
+					endselect
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "off"
+								fog off
+								exitfunction
+					endcase
+					endselect
+				endcase
+			
+			case "end"
+				if editing = 1
+					script_run = 1
+					settoolbarbuttonstate toolbar, 4, 0
+					exitfunction
+				else
+					end
+				endif
+			endcase
+			
+			
+			case "sync"
+				`sync
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "rate"
+					sync rate int(val(Return_Variable()))
+					exitfunction
+					endcase
+					case "on"
+						sync on
+						exitfunction
+					endcase
+					case "off"
+						sync off
+						exitfunction
+					endcase
+				endselect
+				dec Current_Line(Code_Mode)
+				`sync me baby!
+				sync
+				`Also, run the GUI
+				Run_gui()
+				if editing = 1
+					sync_run = 1
+				endif
+				exitfunction
+			endcase
+			
+			case "move"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							move camera val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "left"
+						null = val(Return_Variable())
+						move object left null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+					case "right"
+						null = val(Return_Variable())
+						move object right null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+					case "up"
+						null = val(Return_Variable())
+						move object up null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+					case "down"
+						null = val(Return_Variable())
+						move object down null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+					endselect
+					dec Current_Line(Code_Mode)
+					null = val(Return_Variable())
+					move object null, val(Return_Variable())
+					if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+					exitfunction
+				endcase
+				endselect
+			endcase
+		
+			case "turn"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						inc Current_Line(Code_Mode)
+						select Script_File$(Current_Line(Code_Mode), Code_Mode)
+							case "left"
+								null = val(Return_Variable())
+								turn object left null, val(Return_Variable())
+								if SC_CollisionStatus(null) = 1
+									SC_UpdateObject null
+								endif
+								exitfunction
+							endcase
+							case "right"
+								null = val(Return_Variable())
+								turn object right null, val(Return_Variable())
+								if SC_CollisionStatus(null) = 1
+									SC_UpdateObject null
+								endif
+								exitfunction
+							endcase
+						endselect
+					endcase
+					case "camera"
+						inc Current_Line(Code_Mode)
+						if outAGE = 1
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							select Script_File$(Current_Line(Code_Mode), Code_Mode)
+								case "left"
+									turn camera left val(Return_Variable())
+									exitfunction
+								endcase
+								case "right"
+									turn camera right val(Return_Variable())
+									exitfunction
+								endcase
+							endselect
+						endif
+					endcase
+				endselect
+			endcase
+			
+			case "play"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						play object val(Return_Variable()),val(Return_Variable()),val(Return_Variable())
+						exitfunction
+					endcase
+					case "sound"
+						play sound val(Return_Variable())
+						exitfunction
+					endcase
+					case "music"
+						play music val(Return_Variable())
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "loop"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						loop object val(Return_Variable()),val(Return_Variable()),val(Return_Variable())
+						exitfunction
+					endcase
+					case "sound"
+						loop sound val(Return_Variable())
+						exitfunction
+					endcase
+					case "music"
+						loop music val(Return_Variable())
+						exitfunction
+					endcase
+				endselect
+				
+					dec Current_Line(Code_Mode)
+					lc = 1
+					do
+						dec Current_Line(Code_Mode)
+						if Script_File$(Current_Line(Code_Mode), Code_Mode) = "loop"
+							inc lc
+						endif
+						if Script_File$(Current_Line(Code_Mode), Code_Mode) = "do"
+							dec lc
+							if lc = 0
+								exit
+							endif
+						endif
+					loop
+				exitfunction
+			endcase
+			
+			case "exit"
+				lc = 1
+				do
+					inc Current_Line(Code_Mode)
+					if Script_File$(Current_Line(Code_Mode), Code_Mode) = "do"
+						inc lc
+					endif
+					if Script_File$(Current_Line(Code_Mode), Code_Mode) = "loop"
+						dec lc
+						if lc = 0
+							exit
+						endif
+					endif
+				loop
+				exitfunction
+			endcase
+			
+			case "stop"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						stop object val(Return_Variable())
+						exitfunction
+					endcase
+					case "sound"
+						stop sound val(Return_Variable())
+						exitfunction
+					endcase
+					case "music"
+						stop music val(Return_Variable())
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "load"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "agm"
+						inc Current_Line(Code_Mode)
+						select Script_File$(Current_Line(Code_Mode), Code_Mode)
+							case "level"
+								if editing = 1
+									nul$ = Return_Variable()
+								else
+									loadScene(Return_Variable())
+								endif
+								exitfunction
+							endcase
+						endselect
+					endcase
+				endselect
+			endcase
+			
+			case "text"
+				text val(Return_Variable()), val(Return_Variable()), Return_Variable()
+				exitfunction
+			endcase
+			
+			
+			case "draw"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "image"
+						paste image val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+						exitfunction
+					endcase
+					case "timage"
+						paste image val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), 1
+						exitfunction
+					endcase
+					case "box"
+						box val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable())
+						exitfunction
+					endcase
+					case "line"
+						line val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable())
+						exitfunction
+					endcase
+					case "dot"
+						x = val(Return_Variable())
+						y = val(Return_Variable())
+						colour = val(Return_Variable())
+						box x,y,x+1, y+1,colour, colour, colour, colour
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			
+			
+			
+			case "point"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							point camera val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+						null = val(Return_Variable())
+						point object null, val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "pause"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "sound"
+						pause sound val(Return_Variable())
+						exitfunction
+					endcase
+					case "music"
+						pause music val(Return_Variable())
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "print"
+				print Return_Variable()
+				exitfunction
+			endcase
+			
+			case "endif"
+				exitfunction
+			endcase
+			
+			case "color"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "backdrop"
+						color backdrop val(Return_Variable())
+						exitfunction
+					endcase
+					case "fog"
+						fog color val(Return_Variable())
+						exitfunction
+					endcase
+					case "ambience"
+						color ambient light val(Return_Variable())
+						exitfunction
+					endcase
+					case "light"
+						Li_no = val(Return_Variable())
+						light_colour(light_count) = val(Return_Variable())
+						Update_Active_Lights()
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "colour"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "backdrop"
+						color backdrop val(Return_Variable())
+						exitfunction
+					endcase
+					case "fog"
+						fog color val(Return_Variable())
+						exitfunction
+					endcase
+					case "ambience"
+						color ambient light val(Return_Variable())
+						exitfunction
+					endcase
+					case "light"
+						Li_no = val(Return_Variable())
+						light_colour(light_count) = val(Return_Variable())
+						Update_Active_Lights()
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "write"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "file"
+						write string val(Return_Variable()), Return_Variable()
+						exitfunction
+					endcase
+				endselect
+			endcase
+		
+			case "sleep"
+				DoSleep(val(Return_Variable()))
+				exitfunction
+			endcase
+			
+			case "append"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						nul$ = Return_Variable()
+						nul = val(Return_Variable())
+						append object nul$, nul, TOTAL OBJECT FRAMES(nul)
+						exitfunction
+					endcase
+				endselect
+			endcase
+				
+			case "rotate"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							nul$ = Return_Variable()
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							rotate camera val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+						null = val(Return_Variable())
+						rotate object null, val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "effect"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "on"
+						null = val(Return_Variable())
+						if null = 1
+							make camera 1 : color backdrop 1,rgb(0,0,0)
+							i = FreeImage()
+							set camera to image 1,i,val(Return_Variable()),val(Return_Variable())
+							global ScrObj:ScrObj = FreeObject()
+							dist#=(screen height()/2)/tan(62/2)-5
+							make object plain ScrObj,screen width(),screen height()
+							ghost object on ScrObj : disable object zwrite ScrObj
+							hide object ScrObj
+							set object light ScrObj,0
+							position object ScrObj,0,0,dist#
+							lock object on ScrObj
+							
+							texture object ScrObj,i
+							show object ScrObj
+							exitfunction
+						endif
+					endcase
+					case "off"
+						null = val(Return_Variable())
+						if null = 1
+							delete camera 1
+							hide object ScrObj
+							exitfunction
+						endif
+					endcase
+					case "invertcam"
+						null = val(Return_Variable())
+						if camera exist(1)
+							
+							YPos# = Camera Position Y()
+							`Position came 1 under the water!
+							If YPos# > null
+								position camera 1,camera position x(),-Ypos#,camera position z()
+								rotate camera 1,-camera angle x(),camera angle y(),camera angle z()
+							Else
+								position camera 1,camera position x(),-Ypos#,camera position z()
+								rotate camera 1, -Camera angle x(),camera angle y(),camera angle z()
+							Endif
+							
+							`Sync for reflecton cam
+							sync mask 0x00000002
+							sync
+							sync mask 0x00000001
+							
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "update"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "effect"
+						null = val(Return_Variable())
+						if null = 1
+							position camera 1,camera position x(0),camera position y(0),camera position z(0)
+							rotate camera 1, camera angle x(0), camera angle y(0), camera angle z(0)
+							exitfunction
+						endif
+					endcase
+
+					case "lights"
+						`run through lights, grab nearest and activate
+						Update_Active_Lights()
+					exitfunction
+					endcase
+					case "delta"
+						if editing = 0
+							updateDelta()
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+
+			case "delete"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						null = val(Return_Variable())
+						DeleteObject(null)
+						exitfunction
+					endcase
+					case "light"
+						null = val(Return_Variable())
+						delete_light(null)
+						exitfunction
+					endcase
+					case "image"
+						null = val(Return_Variable())
+						if ImageExist(null)
+							delete image null
+						endif
+						exitfunction
+					endcase
+					case "sound"
+						null = val(Return_Variable())
+						delete sound null
+						exitfunction
+					endcase
+					case "music"
+						null = val(Return_Variable())
+						delete music null
+						exitfunction
+					endcase
+					case "file"
+						if safe_mode = 0
+							delete file Return_Variable()
+						else
+							delete file applicationDirectory+"/"+Return_Variable()
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			
+			
+		
+			case "texture"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "object"
+						texture object int(val(Return_Variable())), int(val(Return_Variable()))
+						exitfunction
+					endcase
+					case "stage"
+						inc Current_Line(Code_Mode)
+						select Script_File$(Current_Line(Code_Mode), Code_Mode)
+							case "object"
+								texture object int(val(Return_Variable())), int(val(Return_Variable())), int(val(Return_Variable()))
+								exitfunction
+							endcase
+						endselect
+					endcase
+				endselect
+			endcase
+		
+			case "xrotate"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							xrotate camera val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+						null = val(Return_Variable())
+						xrotate object null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "yrotate"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							yrotate camera val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+						null = val(Return_Variable())
+						yrotate object null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "zrotate"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							zrotate camera val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+						null = val(Return_Variable())
+						zrotate object null, val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "message"
+				`DarkSide_Set_Message_Box_Title "AGE Engine"
+				`DarkSide_Set_Message_Box_Text Return_Variable()
+				`DarkSide_Message_Box_A
+				exitfunction
+			endcase
+			
+			case "loadgui"			
+				load_gui(Return_Variable())
+				exitfunction
+			endcase
+			case "guisetx"
+				gui_SetX(val(Return_Variable()), val(Return_Variable()))
+				exitfunction
+			endcase
+			case "guisety"
+				gui_SetY(val(Return_Variable()), val(Return_Variable()))
+				exitfunction
+			endcase
+			
+		
+		
+			case "position"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "camera"
+						if outAGE = 1
+							nul$ = Return_Variable()
+							nul$ = Return_Variable()
+							nul$ = Return_Variable()
+							exitfunction
+						else
+							position camera val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+							exitfunction
+						endif
+					endcase
+					case "object"
+						null = val(Return_Variable())
+						position object null, val(Return_Variable()), val(Return_Variable()), val(Return_Variable())
+						if SC_CollisionStatus(null) = 1
+							SC_UpdateObject null
+						endif
+						exitfunction
+					endcase
+					case "mouse"
+						position mouse val(Return_Variable()), val(Return_Variable())
+						exitfunction
+					endcase
+					case "light"
+						Li_no = val(Return_Variable())
+						light_position(Li_no, 1) = val(Return_Variable())
+						light_position(Li_no, 2) = val(Return_Variable())
+						light_position(Li_no, 3) = val(Return_Variable())
+						Update_Active_Lights()
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "backdrop"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "on"
+						backdrop on
+						color backdrop rgb(200,200,200)
+						set ambient light 50
+						fog on
+						fog distance 30000
+						fog color rgb(143,173,200)
+						set camera range 10, 30000
+						autocam off
+						exitfunction
+					endcase
+					case "off"
+						backdrop off
+						exitfunction
+					endcase
+				endselect
+			endcase
+			
+			case "ambient"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "light"
+						set ambient light val(Return_Variable())
+						exitfunction
+					endcase
+				endselect
+			endcase		
+				
+			case "setolddir"
+				set dir applicationDirectory
+				Main_Dir$ = get dir$()
+				exitfunction
+			endcase
+			
+		
+			
+			case "guidelete"
+				gui_Delete(val(Return_Variable()))
+				exitfunction
+			endcase
+			
+		
+			
+			case "setmaindir"
+				if editing = 1
+					if mediaDirectory <> ""
+						set dir Main_Dir$ + "\packs\current"
+					endif
+				else
+					set dir mediaDirectory
+					Main_Dir$ = get dir$()
+				endif
+				exitfunction
+			endcase
+		
+			case "runmscript"
+				Current_Line(Code_Mode) = 0
+				Code_Mode = MScript
+				exitfunction
+			endcase
+			case "runlscript"
+				Code_Mode = LScript
+				exitfunction
+			endcase
+			case "runiscript"
+				if editing = 1
+					
+				else
+					Code_Mode = IScript
+				endif
+				exitfunction
+			endcase
+			case "runescript"
+				Code_Mode = EScript
+				exitfunction
+			endcase
+			
+			case "guisettext"
+				gui_SetText(val(Return_Variable()), Return_Variable())
+				exitfunction
+			endcase
+		
+		
+			case "guisetxsize"
+				gui_SetXSize(val(Return_Variable()), val(Return_Variable()))
+				exitfunction
+			endcase
+			case "guisetysize"
+				gui_SetYSize(val(Return_Variable()), val(Return_Variable()))
+				exitfunction
+			endcase
+			
+		
+		
+		
+			case "guisetactive"
+				gui_SetActive(val(Return_Variable()))
+				exitfunction
+			endcase
+			case "runcollision"
+				CalculateCollision(val(Return_Variable()))
+				exitfunction
+			endcase
+			
+			case "runspherecollision"
+				SphereSlidingCollision(val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()))
+				exitfunction
+			endcase
+		
+		
+		
+			case "runyintersections"
+				RunYIntersections(val(Return_Variable()))
+				exitfunction
+			endcase
+			case "runxintersections"
+				RunXIntersections(val(Return_Variable()))
+				exitfunction
+			endcase
+			case "runzintersections"
+				RunZIntersections(val(Return_Variable()))
+				exitfunction
+			endcase
+			
+			
+		
+		
+			case "rotateobjecttopoint"
+				RotateObjectToPoint( val(Return_Variable()) ,val(Return_Variable()) ,val(Return_Variable()) ,val(Return_Variable()) ,val(Return_Variable()) )
+				exitfunction
+			endcase
+			
+		
+			case "net_update"
+				if net connected()
+					if net get message() > 0
+						net_message_type = net get byte()
+					else
+						net_message_type = 0
+					endif
+				endif
+				exitfunction
+			endcase
+			case "net_put_byte"
+				net put byte val(Return_Variable())
+				exitfunction
+			endcase
+			case "net_put_int"
+				net put int val(Return_Variable())
+				exitfunction
+			endcase
+			case "net_put_string"
+				net put string Return_Variable()
+				exitfunction
+			endcase
+			case "net_put_float"
+				net put float val(Return_Variable())
+				exitfunction
+			endcase
+			case "net_send_put"
+				net send 1
+				exitfunction
+			endcase
+			case "net_send_string"
+				net put string CHR$(val(Return_Variable())) + Return_Variable()
+				net send 1
+				exitfunction
+			endcase
+			case "net_send_position_xy_y"
+				net put byte 4
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net send 1
+				exitfunction
+			endcase
+			case "net_send_position_xyz_y"
+				net put byte 4
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net send 1
+				exitfunction
+			endcase
+			case "net_send_position_xyz_xyz"
+				net put byte 4
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net put float val(Return_Variable())
+				net send 1
+				exitfunction
+			endcase
+			
+			
+			
+			case "function"
+				inc in_function_cnt
+				exitfunction
+			endcase
+			
+			case "endfunction"
+				dec in_function_cnt
+				exitfunction
+			endcase
+			
+			case "return"
+				in_function_rslt = Return_Variable()
+				returning_function_data = 1
+				
+				current_function_cnt = in_function_cnt - 1
+				
+				do
+					inc Current_Line(Code_Mode)
+					if Script_File$(Current_Line(Code_Mode), Code_Mode) = "function"
+						inc in_function_cnt
+					else
+						if Script_File$(Current_Line(Code_Mode), Code_Mode) = "endfunction"
+							dec in_function_cnt
+							`if in_function_cnt = 0
+							if in_function_cnt = current_function_cnt
+								exitfunction
+							endif
+						endif
+					endif
+				loop
+				
+			endcase
+			
+			
+			case "setdata"
+				set_dat(Return_Variable(), Return_Variable())
+				exitfunction
+			endcase
+			case "emptydata"
+				empty_dat()
+				exitfunction
+			endcase
+			case "savedata"
+				save_dat(Return_Variable())
+				exitfunction
+			endcase
+			case "loaddata"
+				load_dat(Return_Variable())
+				exitfunction
+			endcase
+			
+	endselect
+	
+	
+	`DarkSide_Set_Message_Box_Title "Unrecognized Command!"
+	`DarkSide_Set_Message_Box_Text "Could not understand command " + chr$(34) + Script_File$(Current_Line(Code_Mode), Code_Mode) + chr$(34) + "   " + str$(Code_Mode)+ ":" + Str$(Current_Line(Code_Mode))
+	`DarkSide_Message_Box_A
+
+	if editing = 0
+		end
+	endif
+	
+endfunction
+
+
+Function Condition()
+	
+	F_Var1$ = ""
+	F_Var2$ = ""
+	F_Con$ = ""
+	F_Con2$ = ""
+	
+	F_Var1$ = Return_Variable()
+	
+	inc Current_Line(Code_Mode)
+	F_Con$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+	
+	inc Current_Line(Code_Mode)
+	
+	select Script_File$(Current_Line(Code_Mode), Code_Mode)
+		case "<"
+			F_Con2$ = "<"
+			inc Current_Line(Code_Mode)
+		endcase
+		case ">"
+			F_Con2$ = ">"
+			inc Current_Line(Code_Mode)
+		endcase
+		case "="
+			F_Con2$ = "="
+			inc Current_Line(Code_Mode)
+		endcase
+	endselect
+	dec Current_Line(Code_Mode)
+	
+	F_Var2$ = Return_Variable()
+	
+
+	select F_Con$
+		case "="
+			if F_Var1$ = F_Var2$
+				exitfunction 1
+			else
+				if F_Con2$ <> ""
+					if F_Con2$ = ">"
+						if F_Var1$ > F_Var2$
+							exitfunction 1
+						else
+							exitfunction 0
+						endif
+					else
+						if F_Con2$ = "<"
+							if F_Var1$ < F_Var2$
+								exitfunction 1
+							else
+								exitfunction 0
+							endif
+						endif
+					endif
+				else
+					exitfunction 0
+				endif
+			endif
+		endcase
+		case ">"
+			if val(F_Var1$) > val(F_Var2$)
+				exitfunction 1
+			else
+				if F_Con2$ <> ""
+					if F_Con2$ = "="
+						if F_Var1$ = F_Var2$
+							exitfunction 1
+						else
+							exitfunction 0
+						endif
+					else
+						if F_Con2$ = "<"
+							if F_Var1$ < F_Var2$
+								exitfunction 1
+							else
+								exitfunction 0
+							endif
+						endif
+					endif
+				else
+						exitfunction 0
+				endif
+			endif
+		endcase
+		case "<"
+			if val(F_Var1$) < val(F_Var2$)
+					exitfunction 1
+				else
+					if F_Con2$ <> ""
+						if F_Con2$ = "="
+							if F_Var1$ = F_Var2$
+								exitfunction 1
+							else
+								exitfunction 0
+							endif
+						else
+							if F_Con2$ = ">"
+								if F_Var1$ > F_Var2$
+									exitfunction 1
+								else
+									exitfunction 0
+								endif
+							endif
+						endif
+					else
+						exitfunction 0
+				endif
+			endif
+		endcase
+	endselect
+	
+endfunction 0
+
+
+
+Function Return_Variable()
+	F_Result$ = ""
+	F_Sum$ = ""
+	F_Var$ = ""
+	F_Var2$ = ""
+	F_Num$ = ""
+
+repeat
+	
+	`first var
+	F_Var$ = Return_Single()
+	remstart
+	if F_Var$ = ""
+		exitfunction F_Var$
+	endif
+	remend
+	`bracketCount
+	`commandCount
+	if commandCount > 0
+		if bracketCount + 1 = commandCount
+			`Command variable data ended
+			dec commandCount
+			exitfunction F_Var$
+		endif
+	endif
+	
+	remstart
+	if F_Var$ = "-"
+		F_Var$ = "0"
+		dec Current_Line(Code_Mode)
+	endif
+	remend
+	
+	if val(F_Var$) = 0
+		if F_Var$ = "0"
+			`number
+			F_Num$ = F_Var$
+			F_Result$ = ""
+		else
+			`text
+			F_Result$ = F_Var$
+		endif
+	else
+		`number
+		F_Num$ = F_Var$
+		F_Result$ = ""
+	endif
+
+until F_Var$ = "," = 0
+
+	
+	do
+		`sum
+		inc Current_Line(Code_Mode)
+		F_Sum$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+		
+		select F_Sum$
+			case "+"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) + val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					`number
+					`message "number " + F_Var2$
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) + val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+			case "-"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) - val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					`number
+					`message "number " + F_Var2$
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) - val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+			case "/"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) / val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					`number
+					`message "number " + F_Var2$
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) / val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+			case "*"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) * val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) * val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+		endselect
+		
+		if cases = 0
+			if F_Sum$ = ")"
+				F_Result$ = F_Result$ + F_Num$
+				dec bracketCount
+				exitfunction F_Result$
+			endif
+			
+			dec Current_Line(Code_Mode)
+			F_Result$ = F_Result$ + F_Num$
+			exitfunction F_Result$
+		else
+				cases = 0
+		endif
+		
+	loop
+	
+endfunction F_Result$
+
+
+
+
+
+Function Return_if_Variable(current_v$)
+	F_Result$ = ""
+	F_Sum$ = ""
+	F_Var$ = ""
+	F_Var2$ = ""
+	F_Num$ = ""
+
+repeat
+	
+	`first var
+	F_Var$ = current_v$
+	
+	`bracketCount
+	`commandCount
+	if commandCount > 0
+		if bracketCount + 1 = commandCount
+			`Command variable data ended
+			dec commandCount
+			exitfunction F_Var$
+		endif
+	endif
+	
+	remstart
+	if F_Var$ = "-"
+		F_Var$ = "0"
+		dec Current_Line(Code_Mode)
+	endif
+	remend
+	
+	if val(F_Var$) = 0
+		if F_Var$ = "0"
+			`number
+			F_Num$ = F_Var$
+			F_Result$ = ""
+		else
+			`text
+			F_Result$ = F_Var$
+		endif
+	else
+		`number
+		F_Num$ = F_Var$
+		F_Result$ = ""
+	endif
+
+until F_Var$ = "," = 0
+
+	
+	do
+		`sum
+		inc Current_Line(Code_Mode)
+		F_Sum$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+		
+		select F_Sum$
+			case "+"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) + val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					`number
+					`message "number " + F_Var2$
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) + val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+			case "-"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) - val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					`number
+					`message "number " + F_Var2$
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) - val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+			case "/"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) / val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					`number
+					`message "number " + F_Var2$
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) / val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+			case "*"
+				cases = 1
+				`second var
+				F_Var2$ = Return_Single()
+				
+				if val(F_Var2$) = 0
+					if F_Var2$ = "0"
+						`number
+						`message "number " + F_Var2$
+						if F_Num$ = ""
+							F_Num$ = F_Var2$
+						else
+							F_Num$ = str$(val(F_Num$) * val(F_Var2$))
+						endif
+						F_Var2$ = ""
+					else
+						`string
+						`message "string " + F_Var2$
+						F_Result$ = F_Result$ + F_Num$ + F_Var2$
+						`F_Var$ = F_Result$
+						F_Num$ = ""
+					endif
+				else
+					if F_Num$ = ""
+						F_Num$ = F_Var2$
+					else
+						F_Num$ = str$(val(F_Num$) * val(F_Var2$))
+					endif
+					F_Var2$ = ""
+				endif
+			endcase
+		endselect
+		
+		if cases = 0
+			if F_Sum$ = ")"
+				F_Result$ = F_Result$ + F_Num$
+				dec bracketCount
+				exitfunction F_Result$
+			endif
+			
+			dec Current_Line(Code_Mode)
+			F_Result$ = F_Result$ + F_Num$
+			exitfunction F_Result$
+		else
+				cases = 0
+		endif
+		
+	loop
+	
+endfunction F_Result$
+
+Function Return_Single()
+	F_Result$ = ""
+	
+	`second var
+	inc Current_Line(Code_Mode)
+	F_Result$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+	
+	remstart
+	if F_Result$ = ","
+		inc Current_Line(Code_Mode)
+		F_Result$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+	endif
+	remend
+	
+	if asc(F_Result$) > 64
+		`Command
+		F_Result$ = Return_Command()
+		null2$ = Script_File$(Current_Line(Code_Mode)+1, Code_Mode)
+		if null2$ = "+" or null2$ = "-" or null2$ = "*" or null2$ = "/"
+			null = Current_Line(Code_Mode)
+			null2 = Code_Mode
+			null1$ = Script_File$(Current_Line(Code_Mode)-1, Code_Mode)
+			
+			Script_File$(Current_Line(Code_Mode)-1, Code_Mode) = chr$(34)
+			Script_File$(Current_Line(Code_Mode), Code_Mode) = F_Result$
+			
+			dec Current_Line(Code_Mode), 2
+			F_Result$ = Return_Variable()
+			
+			Script_File$(null-1, null2) = null1$
+			Script_File$(null, null2) = ")"
+			
+			exitfunction F_Result$
+		endif
+		exitfunction F_Result$
+	endif
+
+		select asc(F_Result$)
+
+			case 64
+				`Array @
+				F_Result$ = Return_Command()
+				null2$ = Script_File$(Current_Line(Code_Mode)+1, Code_Mode)
+				remstart
+				if null2$ = "+" or null2$ = "-" or null2$ = "*" or null2$ = "/"
+					null = Current_Line(Code_Mode)
+					null2 = Code_Mode
+					Script_File$(Current_Line(Code_Mode), Code_Mode) = F_Result$
+					dec Current_Line(Code_Mode)
+					F_Result$ = Return_Variable()
+					Script_File$(null, null2) = ")"
+					exitfunction F_Result$
+				endif
+				remend
+				exitfunction F_Result$
+			endcase
+			case 40
+				`Open bracket (
+				inc bracketCount
+				F_Result$ = Return_Variable()
+				exitfunction F_Result$
+			endcase
+			case 34
+				`string "
+				inc Current_Line(Code_Mode)
+				F_Result$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+				exitfunction F_Result$
+			endcase
+			case 36
+				`Variable $
+				inc Current_Line(Code_Mode)
+				F_Result$ = variableData(int(val(Script_File$(Current_Line(Code_Mode), Code_Mode))))
+				exitfunction F_Result$
+			endcase
+		endselect
+		
+		`number 123
+		F_Result$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+	
+endfunction F_Result$
+
+
+
+
+Function Return_Command()
+	`commands
+	inc commandCount
+	
+	`F_C1_Len = len(Script_File$(Current_Line(Code_Mode), Code_Mode))
+	
+	select Script_File$(Current_Line(Code_Mode), Code_Mode)
+			
+			case "@"
+				inc Current_Line(Code_Mode)
+				A_N$ = Script_File$(Current_Line(Code_Mode), Code_Mode)
+				F_Result$ = Get_Arr_Data(A_N$, val(Return_Variable()))
+				exitfunction F_Result$			
+			endcase
+			case "len"
+				inc Current_Line(Code_Mode)
+				exitfunction str$(len(Return_Variable()))
+			endcase
+			case "asc"
+				inc Current_Line(Code_Mode)
+				exitfunction str$(asc(Return_Variable()))
+			endcase
+			case "rnd"
+				inc Current_Line(Code_Mode)
+				F_Result$ = str$(rnd(val(Return_Variable())))
+				inc Current_Line(Code_Mode)
+				exitfunction F_Result$
+			endcase
+			case "rgb"
+				null = rgb(val(Return_Variable()),val(Return_Variable()),val(Return_Variable()))
+				exitfunction str$(null)
+			endcase
+			case "get"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "dir$"
+						exitfunction get dir$()
+					endcase
+				endselect
+			endcase
+			case "fsr"
+				exitfunction fsr(Return_Variable(),Return_Variable())
+			endcase
+			
+			
+			`Variable commands
+			case "varswitchflag"
+				f_var = val(Return_Variable())
+				if f_var = 1
+					f_var = 0
+				else
+					f_var = 1
+				endif
+				exitfunction str$(f_var)
+			endcase
+			
+			case "varmin"
+				f_var = val(Return_Variable())
+				f_var2 = val(Return_Variable())
+				if f_var < f_var2
+					exitfunction str$(f_var2)
+				else
+					exitfunction str$(f_var)
+				endif
+			endcase
+			case "varmax"
+				f_var = val(Return_Variable())
+				f_var2 = val(Return_Variable())
+				if f_var > f_var2
+					exitfunction str$(f_var2)
+				else
+					exitfunction str$(f_var)
+				endif
+			endcase
+			`4
+			case "chr$"
+				exitfunction chr$(val(Return_Variable()))
+			endcase
+			case "mid$"
+				exitfunction mid$(Return_Variable(), val(Return_Variable()))
+			endcase
+			case "read"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "file"
+						read string val(Return_Variable()), nool$
+						exitfunction nool$
+					endcase
+				endselect
+			endcase
+			case "file"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "read"
+						null = FreeFile()
+						if safe_mode = 0
+							open to read null, Return_Variable()
+						else
+							open to read null, applicationDirectory+"/"+Return_Variable()
+						endif
+						exitfunction str$(null)
+					endcase
+					case "write"
+						null = FreeFile()
+						if safe_mode = 0
+							open to write null, Return_Variable()
+						else
+							open to write null, applicationDirectory+"/"+Return_Variable()
+						endif
+						exitfunction str$(null)
+					endcase
+					case "exist"
+						if safe_mode = 0
+							null = file exist(Return_Variable())
+						else
+							null = file exist(applicationDirectory+"/"+Return_Variable())
+						endif
+						exitfunction str$(null)
+					endcase
+				endselect
+			endcase
+		
+			`5
+
+			case "delta"
+				exitfunction str$(Delta(val(Return_Variable())))
+			endcase
+			case "mousex"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(mousex())
+			endcase
+			case "mousey"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(mousey())
+			endcase
+			case "timer"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(timer())
+			endcase
+			case "left$"
+				exitfunction left$(Return_Variable(), val(Return_Variable()))
+			endcase
+		
+		`6
+		
+			case "screen"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "fps"
+						inc Current_Line(Code_Mode), 2
+						exitfunction str$(screen fps())
+					endcase
+					case "x"
+						inc Current_Line(Code_Mode), 2
+						exitfunction str$(screen width())
+					endcase
+					case "y"
+						inc Current_Line(Code_Mode), 2
+						exitfunction str$(screen height())
+					endcase
+				endselect
+			endcase
+			
+			case "camera"
+				inc Current_Line(Code_Mode)
+				select Script_File$(Current_Line(Code_Mode), Code_Mode)
+					case "angle"
+						inc Current_Line(Code_Mode)
+						select Script_File$(Current_Line(Code_Mode), Code_Mode)
+							case "x"
+								inc Current_Line(Code_Mode), 2
+								exitfunction str$(wrapvalue(camera angle x()))
+							endcase
+							case "y"
+								inc Current_Line(Code_Mode), 2
+								exitfunction str$(wrapvalue(camera angle y()))
+							endcase
+							case "z"
+								inc Current_Line(Code_Mode), 2
+								exitfunction str$(wrapvalue(camera angle z()))
+							endcase
+						endselect
+					endcase
+					case "position"
+						inc Current_Line(Code_Mode)
+						select Script_File$(Current_Line(Code_Mode), Code_Mode)
+							case "x"
+								inc Current_Line(Code_Mode), 2
+								exitfunction str$(camera position x())
+							endcase
+							case "y"
+								inc Current_Line(Code_Mode), 2
+								exitfunction str$(camera position y())
+							endcase
+							case "z"
+								inc Current_Line(Code_Mode), 2
+								exitfunction str$(camera position z())
+							endcase
+						endselect
+					endcase
+					case "image"
+						if camera exist(1) = 0
+							make camera 1
+							set camera range 1,2,48000
+							set camera fov 1,70
+							set camera aspect 1,1.33
+							//color backdrop 1,0
+						endif
+						global invertcamimage
+						invertcamimage = freeimage()
+						set camera to image 1,invertcamimage,512,512
+						exitfunction str$(invertcamimage)
+					endcase
+				endselect
+			endcase
+			
+		case "object"
+			inc Current_Line(Code_Mode)
+			select Script_File$(Current_Line(Code_Mode), Code_Mode)
+				case "position"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "x"
+							exitfunction str$(object position x(val(Return_Variable())))
+						endcase
+						case "y"
+							exitfunction str$(object position y(val(Return_Variable())))
+						endcase
+						case "z"
+							exitfunction str$(object position z(val(Return_Variable())))
+						endcase
+					endselect
+				endcase
+				case "angle"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "x"
+							exitfunction str$(wrapvalue(object angle x(val(Return_Variable()))))
+						endcase
+						case "y"
+							exitfunction str$(wrapvalue(object angle y(val(Return_Variable()))))
+						endcase
+						case "z"
+							exitfunction str$(wrapvalue(object angle z(val(Return_Variable()))))
+						endcase
+					endselect
+				endcase
+				case "collision"
+					exitfunction str$(object collision(val(Return_Variable()),val(Return_Variable())))
+				endcase
+				case "screen"
+					inc Current_Line(Code_Mode)
+					select Script_File$(Current_Line(Code_Mode), Code_Mode)
+						case "x"
+							exitfunction str$(object screen x(val(Return_Variable())))
+						endcase
+						case "y"
+							exitfunction str$(object screen y(val(Return_Variable())))
+						endcase
+					endselect
+				endcase
+				case "frames"
+					exitfunction str$(total object frames(val(Return_Variable())))
+				endcase
+				case "visible"
+					null = val(Return_Variable())
+					if object in screen(null)
+						if object visible(null)
+							exitfunction "1"
+						endif
+					endif
+					exitfunction "0"
+				endcase
+			endselect
+		endcase
+
+			case "right$"
+				exitfunction right$(Return_Variable(), val(Return_Variable()))
+			endcase
+		
+		`7
+
+		case "makebox"
+			exitfunction str$(MakeBox(val(Return_Variable()),val(Return_Variable()),val(Return_Variable())))
+		endcase
+		case "guigettext$"
+			exitfunction gui_GetText(val(Return_Variable()))
+		endcase
+		
+			`8
+			case "wraptext$"
+				exitfunction wraptext(Return_Variable(), val(Return_Variable()))
+			endcase
+			case "keystate"
+				exitfunction str$(keystate(val(Return_Variable())))
+			endcase
+			case "scancode"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(scancode())
+			endcase
+			case "makecube"
+				exitfunction str$(MakeCube(val(Return_Variable())))
+			endcase
+			case "distance"
+				exitfunction str$(Distance3D(val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable()),val(Return_Variable())))
+			endcase
+			case "cutparse$"
+				exitfunction cutparse(val(Return_Variable()),Return_Variable(),Return_Variable())
+			endcase
+			
+			`9
+		
+			case "lineclear"
+				exitfunction str$(LineClear( val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()) ))
+			endcase
+			case "loadimage"
+				exitfunction str$(LoadImage(Return_Variable()))
+			endcase
+			case "loadsimage"
+				exitfunction str$(LoadImageA(Return_Variable()))
+			endcase
+			case "loadmusic"
+				exitfunction str$(LoadMusic(Return_Variable()))
+			endcase
+			case "loadsound"
+				exitfunction str$(LoadSound(Return_Variable()))
+			endcase
+			case "makeplain"
+				exitfunction str$(MakePlain(val(Return_Variable())))
+			endcase
+					
+		`10
+		
+			case "mouseclick"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(mouseclick())
+			endcase
+			case "mousemovex"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(mousemovex())
+			endcase
+			case "mousemovey"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(mousemovey())
+			endcase
+			case "loadobject"
+				exitfunction str$(LoadObject(Return_Variable()))
+			endcase
+			case "makesphere"
+				exitfunction str$(MakeSphere(val(Return_Variable())))
+			endcase
+			case "loadeffect"
+				exitfunction str$(LoadEffect(Return_Variable()))
+			endcase
+		
+			
+			
+		`11
+		
+			case "withinrange"
+				exitfunction str$(WithinRange(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable())))
+			endcase
+		
+		
+			
+		`14
+		
+		case "objectdistance"
+			obj = val(Return_Variable())
+			exitfunction str$(Distance3D(object position x(obj),object position y(obj),object position z(obj),val(Return_Variable()),val(Return_Variable()),val(Return_Variable())))
+		endcase
+		
+		`15
+		
+		case "objectlineclear"
+			exitfunction str$(ObjectLineClear( val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable())))
+		endcase
+		
+		case "objectsdistance"
+			obj = val(Return_Variable())
+			obj2 = val(Return_Variable())
+			exitfunction str$(Distance3D(object position x(obj),object position y(obj),object position z(obj),object position x(obj2),object position y(obj2),object position z(obj2)))
+		endcase
+		
+		case "cutimagesection"
+			exitfunction str$(cutimagesection(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable())))
+		endcase
+		`16
+		
+			case "objectslineclear"
+				exitfunction str$(ObjectsLineClear( val(Return_Variable()), val(Return_Variable()) ))
+			endcase
+			
+			case "objectundermouse"
+				inc Current_Line(Code_Mode), 2
+				if oo_top_object > 0
+					exitfunction str$(pick object(mousex(), mousey(),1,oo_top_object))
+				else
+					exitfunction "0"
+				endif
+			endcase
+			
+			case "loadimagesection"
+				exitfunction str$(loadimagesection(Return_Variable(), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable())))
+			endcase
+			
+		`17
+		
+			case "objectwithinrange"
+				exitfunction str$(ObjectWithinRange( val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()) ))
+			endcase
+		
+		`18
+		
+			case "objectswithinrange"
+				exitfunction str$(ObjectsWithinRange( val(Return_Variable()), val(Return_Variable()), val(Return_Variable()) ))
+			endcase
+			case "pointingtoposition"
+				exitfunction str$(PointingToPosition( val(Return_Variable()) ,val(Return_Variable()) ,val(Return_Variable()) ,val(Return_Variable()) ,val(Return_Variable()) ))
+			endcase
+		
+		`20
+		
+			case "returnxintersections"
+				exitfunction str$(ReturnXIntersections( val(Return_Variable()) ))
+			endcase
+			case "returnyintersections"
+				exitfunction str$(ReturnYIntersections( val(Return_Variable()) ))
+			endcase
+			case "returnzintersections"
+				exitfunction str$(ReturnZIntersections( val(Return_Variable()) ))
+			endcase
+			
+			case "returnxcollisionslide"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getcollisionslidex())
+			endcase
+			case "returnycollisionslide"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getcollisionslidey())
+			endcase
+			case "returnzcollisionslide"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getcollisionslidez())
+			endcase
+			
+			case "returnxcollisionnormal"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getcollisionnormalx())
+			endcase
+			case "returnycollisionnormal"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getcollisionnormaly())
+			endcase
+			case "returnzcollisionnormal"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getcollisionnormalz())
+			endcase
+			
+			case "returnxcollisionposition"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getstaticcollisionx())
+			endcase
+			case "returnycollisionposition"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getstaticcollisiony())
+			endcase
+			case "returnzcollisionposition"
+				inc Current_Line(Code_Mode), 2
+				exitfunction str$(sc_getstaticcollisionz())
+			endcase
+		
+		
+		`Lighting command set
+		case "makelight"
+			light_number = add_light(val(Return_Variable()), val(Return_Variable()))
+			exitfunction str$(light_number)
+		endcase
+		
+		`GUI return
+			
+			case "makelabel"
+				exitfunction str$(gui_MakeLabel(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), Return_Variable(), val(Return_Variable())))
+			endcase
+			case "makepanel"
+				exitfunction str$(gui_MakePanel(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable())))
+			endcase
+			case "makewindow"
+				exitfunction str$(gui_MakeWindow(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), Return_Variable()))
+			endcase
+			case "makebutton"
+				exitfunction str$(gui_MakeButton(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), Return_Variable(), val(Return_Variable())))
+			endcase
+			case "maketextbox"
+				exitfunction str$(gui_MakeTextBox(val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), val(Return_Variable()), Return_Variable(), val(Return_Variable())))
+			endcase
+			case "guigetx"
+				exitfunction str$(gui_GetX(val(Return_Variable())))
+			endcase
+			case "guigety"
+				exitfunction str$(gui_GetY(val(Return_Variable())))
+			endcase
+			case "guigetxsize"
+				exitfunction str$(gui_GetXSize(val(Return_Variable())))
+			endcase
+			case "guigetysize"
+				exitfunction str$(gui_GetYSize(val(Return_Variable())))
+			endcase
+			case "guigetclicked"
+				inc Current_Line(Code_Mode), 2
+				`exitfunction str$(gui_clicked)
+				exitfunction str$(gui_GetClicked())
+			endcase
+		
+		
+		`Multiplayer command set
+			case "net_connect"
+				connected = net connect(Return_Variable())
+				remstart
+				connected = net join(Return_Variable())
+				net stack on
+				remend
+				exitfunction str$(connected)
+			endcase
+			case "net_message_type"
+				exitfunction str$(net_message_type)
+			endcase
+			case "net_message_string"
+				exitfunction net get string()
+			endcase
+			case "net_message_float"
+				exitfunction str$(net get float())
+			endcase
+			case "net_message_int"
+				exitfunction str$(net get int())
+			endcase
+		
+		`other net stuff
+		case "downloadfile"
+			downloadfile(Return_Variable(),Return_Variable())
+			exitfunction
+		endcase
+		
+		case "downloadstring$"
+			exitfunction downloadstring(Return_Variable())
+		endcase
+		
+		case "getip$"
+			inc Current_Line(Code_Mode), 2
+			exitfunction getip$()
+		endcase
+		
+		`function tests		
+		case "function"
+			`remember pre-function vars
+			rem1 = bracketCount
+			inc in_function_cnt
+			current_function_cnt = in_function_cnt - 1
+			repeat
+				inc Current_Line(Code_Mode)
+				Define_Line()
+			until in_function_cnt = current_function_cnt
+			`set back to original vars
+			bracketCount = rem1
+				`tests
+				returning_function_data = 0
+			exitfunction Return_if_Variable(in_function_rslt)
+			
+		endcase
+		
+		case "getdata"
+			exitfunction get_dat(Return_Variable())
+		endcase
+			
+	endselect
+	
+	`DarkSide_Set_Message_Box_Title "Unrecognized Data Return Command!"
+	`DarkSide_Set_Message_Box_Text "Could not understand data return command " + chr$(34) + Script_File$(Current_Line(Code_Mode), Code_Mode) + chr$(34) + "   " + str$(Code_Mode)+ ":" + Str$(Current_Line(Code_Mode))
+	`DarkSide_Message_Box_A
+	
+	`save compiled script
+	Save_Compiled_Code("cscript.txt")
+	
+	`save a copy of the variables
+	remstart
+	if variableCount > 0
+		if file exist("cpv_.txt") then delete file "cpv_.txt"
+		open to write 1, "cpv_.txt"
+			for a = 1 to variableCount
+				write string 1, variableName(a)+" / "+str$(variableNumber(a))+" / "+variableData(a)
+			next a
+		close file 1
+	endcase
+	remend
+	if editing = 0
+		end
+	endif
+	f_r$ = ""
+endfunction f_r$
+
+
+`The lovable parsing functions
+
+
+Function Save_Compiled_Code(F_Name as string)
+	if file exist(F_Name) then delete file F_Name
+		open to write 2, F_Name
+			for y = 0 to 3
+				for x = 1 to Script_File_Lin
+					//if Script_File$(x,y) <> ""
+						write string 2, Script_File$(x,y)
+					//endif
+				next x
+				write string 2, "	"+str$(Script_File_Lin)
+			next y
+		close file 2
+endfunction
+
+
+Function R_V_once(The_String$)
+
+if left$(The_String$, 1) = "$"
+
+if right$(The_String$,1) = "#"
+	The_String$ = left$(The_String$, len(The_String$)-1) + str$(entityCount)
+endif
+
+
+	ex = 0
+				
+	if variableCount > 0
+		for ab = 1 to variableCount
+			if The_String$ = variableName(ab)
+				The_String$ = "$"+str$(variableNumber(ab))
+				ex = 1
+			endif
+		next ab
+	endif
+	
+	if ex = 0
+		if variableCount > 0
+			for ab = 1 to variableCount
+				if The_String$ = "$"+str$(variableNumber(ab))
+					ex = 1
+				endif
+			next ab
+		endif
+	endif
+
+	if ex = 0
+		inc variableCount
+		
+		dim variableName(variableCount) as string
+		dim variableNumber(variableCount) as integer
+		dim variableData(variableCount) as string
+		variableName(variableCount) = The_String$
+		variableNumber(variableCount) = variableCount
+		variableData(variableCount) = ""
+		The_String$ = "$"+str$(variableCount)
+	endif
+
+endif
+
+endfunction The_String$
+
+Function Add_Variable(Num as integer)
+	inc variableCount
+	dim variableName(variableCount) as string
+	dim variableNumber(variableCount) as integer
+	dim variableData(variableCount) as string
+	variableNumber(variableCount) = Num
+	variableData(variableCount) = ""
+endfunction
+
+
+
+
+
+
+
+
+
+
+
+`*************************** additional ***********************
+
+`delta functions
+`Call every loop
+Function updateDelta()
+TheTimer=Timer()
+deltaLoopTime=TheTimer-deltaLastTime
+deltaLastTime=TheTimer
+Endfunction
+
+`Function to translate values according to time
+Function Delta(Value1#)
+ 	ResultValue#=Value1#*0.060*deltaLoopTime
+Endfunction ResultValue#
+
+function write_string(f_s$, f_n)
+
+    for a_f = 1 to len(f_s$)
+        mid_S$ = mid$(f_s$, a_f)
+        if mid_S$ = chr$(13)
+            `line break
+            write string f_n, F_String$
+            F_String$ = ""
+        else
+            if mid_S$ = chr$(10)
+                `part of a line break
+            else
+               F_String$ = F_String$ + mid_S$
+            endif
+        endif
+    next a_f
+    if F_String$ <> ""
+    	write string f_n, F_String$
+    endif
+
+endfunction
+
+Function Intersect_Object(Object_Number, X#, Y#, Z#, toX#, toY#, toZ#)
+	if SC_intersectObject ( Object_Number, X#, Y#, Z#, toX#, toY#, toZ#)
+		`Was an intersection
+		exitfunction SC_GetCollisionDistance()
+	endif
+endfunction 0.0
+
+
+function RotateObjectToPoint(Object,X#,Y#,Z#,Smooth#)
+X1#=object angle x(Object)
+Y1#=object angle y(Object)
+Z1#=object angle z(Object)
+point object Object, X#, Y#, Z#
+X1#=curveangle(object angle x(Object),X1#,Smooth#)
+Y1#=curveangle(object angle y(Object),Y1#,Smooth#)
+Z1#=curveangle(object angle z(Object),Z1#,Smooth#)
+rotate object Object,X1#,Y1#,Z1#
+endfunction
+
+
+Function PointingToPosition(Object,X#,Y#,Z#,Angle#)
+X1#=wrapvalue(object angle x(Object))
+Y1#=wrapvalue(object angle y(Object))
+Z1#=wrapvalue(object angle z(Object))
+point object Object, X#,Y#,Z#
+i = 0
+if int(X1#) < int(wrapvalue(object angle x(Object)))+Angle# and int(X1#) > int(wrapvalue(object angle x(Object)))-Angle#
+	if int(Y1#) < int(wrapvalue(object angle y(Object)))+Angle# and int(Y1#) > int(wrapvalue(object angle y(Object)))-Angle#
+		if int(Z1#) < int(wrapvalue(object angle z(Object)))+Angle# and int(Z1#) > int(wrapvalue(object angle z(Object)))-Angle#
+			i = 1
+		endif
+	endif
+endif
+rotate object Object,X1#,Y1#,Z1#
+endfunction i
+
+if memblock exist(1)
+	delete memblock 1
+endif
+
+
+function Distance3D(x1,y1,z1,x2,y2,z2)
+result#=sqrt((x1-x2)^2+(y1-y2)^2+(z1-z2)^2)
+endfunction result#
+
+function DoSleep(MS as dword)
+   if DLL EXIST(1) = 0 then LOAD DLL "kernel32.dll", 1
+   CALL DLL 1, "Sleep", MS
+endfunction
+
+function loadimagesection(file as string, x as integer, y as integer, x2 as integer, y2 as integer)
+	null = loadimagea(file)
+	paste image null, 1,1
+	f_r = freeimage()
+	get image f_r,x,y,x+x2,y+y2
+	delete image null
+endfunction f_r
+
+function cutimagesection(null as integer, x as integer, y as integer, x2 as integer, y2 as integer)
+	paste image null, 1,1
+	f_r = freeimage()
+	get image f_r,x,y,x+x2,y+y2
+endfunction f_r
+
+`net stuff
+
+function downloadfile(from$, to$)
+   load dll "urlmon.dll", 2
+   Status = call dll(2, "URLDownloadToFileA", 0, from$, to$, 0, 0)
+   delete dll 2
+endfunction
+
+function downloadstring(from$)
+   if file exist("temp.dat") then delete file "temp.dat"
+   
+   load dll "urlmon.dll", 2
+   Status = call dll(2, "URLDownloadToFileA", 0, from$, "temp.dat", 0, 0)
+   delete dll 2
+   
+    if Status = 0
+      open to read 1, "temp.dat"
+      read string 1, f_result$
+      close file 1
+   endif
+   
+   if file exist("temp.dat") then delete file "temp.dat"
+endfunction f_result$
+
+function getIP$()
+   local IP as string
+   local ReadLine as string
+
+   if file exist("temp.dat") then delete file "temp.dat"
+
+   load dll "urlmon.dll", 2
+   Status = call dll(2, "URLDownloadToFileA", 0, "http://www.whatismyip.org", "temp.dat", 0, 0)
+   delete dll 2
+
+   if Status = 0
+      open to read 1, "temp.dat"
+      read string 1, IP
+      close file 1
+   endif
+
+   if IP = "" then IP = "unknown"
+
+   if file exist("temp.dat") then delete file "temp.dat"
+endfunction IP
+
+function copy_dir(source_dir as string, final_dir as string)
+	name as string
+	folder as string
+	if path exist(final_dir) = 0 then make directory final_dir : wait 10
+		
+		`if file exist(source_dir)
+			set dir source_dir
+			perform checklist for files
+			count=checklist quantity()
+		
+			for i=1 to count
+				name=checklist string$(i)
+				if (name <> ".") and (name <> "..")
+				
+					isFolder=checklist value a(i)
+					
+					if isFolder=1
+			            
+			            folder=get dir$()
+			            
+			            `if path exist(final_dir+"\"+name) = 0 then make directory final_dir+"\"+name : wait 10 : message "making: " + final_dir+"\"+name
+						copy_dir(source_dir+"\"+name, final_dir+"\"+name)
+			            
+			         	empty checklist
+			
+			            set dir folder
+			            perform checklist for files
+					else
+			        	if file exist(final_dir+"\"+name) then delete file final_dir+"\"+name
+						copy file source_dir+"\"+name, final_dir+"\"+name
+						`message "copying: " + source_dir+"\"+name
+					endif
+		         
+				endif
+			next i
+		`endif
+		
+endfunction
+
+function grab_dir(fn as string)
+	for a = 1 to len(fn)
+		if mid$(fn, a) = "\"
+			f_r$ = left$(fn, a-1)
+		endif
+	next a
+endfunction f_r$

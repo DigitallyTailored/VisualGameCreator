@@ -1,0 +1,763 @@
+Function fsr(S_word$,fsr_filename$)
+	S_word$ = lower$(S_word$)
+	C_File = FreeFile()
+	open to read C_File, fsr_filename$
+	while not file end(C_File)
+		read string C_File, line$
+		if lower$(left$(CutParse(1,"=",line$),len(S_word$))) = S_word$
+			R_word$ = CutParse(2,"=",line$)
+		endif
+	endwhile
+	close file C_File
+endfunction R_word$
+
+
+Function StringLineCount(MsgToCount$)
+	MsgLCount = 0
+	if MsgToCount$ <> ""
+		for MsgLetter = 1 to len(MsgToCount$)
+			if mid$(MsgToCount$,MsgLetter) = chr$(10)
+				inc MsgLCount
+			endif
+		next msgword
+	endif
+endfunction MsgLCount
+
+
+function StringSearch(String_Name$,FieldName$,Halfer$,Enum,EnumMark$)
+	String_Name$=String_Name$+chr$(13)+chr$(10)
+	LineCount = StringLineCount(String_Name$)
+	if LineCount > 0
+		for Line_Number = 1 to LineCount
+			if CutParse(1,Halfer$,CutParse(Line_Number,chr$(10),String_Name$)) = FieldName$
+				StringSearchResult$=CutParse(Enum,EnumMark$,CutParse(2,Halfer$,CutParse(Line_Number,chr$(10),String_Name$)))
+				exit
+			endif
+		next line_number
+	endif
+endfunction StringSearchResult$
+
+
+function wraptext(ttw as string, xs as integer)
+	f_r as string
+
+	for a = 1 to len(ttw)
+		if mid$(ttw,a) = " "
+			sep = a
+		endif
+		if text width(left$(ttw, a)) > xs
+			if sep = 0
+				f_r = f_r + left$(ttw, a)+chr$(13)+chr$(10)
+				ttw = right$(ttw, len(ttw)-a)
+			else
+				f_r = f_r + left$(ttw, sep)+chr$(13)+chr$(10)
+				ttw = right$(ttw, len(ttw)-sep)
+			endif
+			a = 0
+			sep = 0
+		endif
+	next a
+	
+	if f_r = ""
+		f_r = ttw
+	else
+		f_r = f_r + ttw
+	endif
+endfunction f_r
+
+
+
+remstart
+Function Parse_Code(Script_File as string)
+	open to read 1, Script_File
+	repeat
+		
+		read string 1, New_Line$
+		Scan_Line(New_Line$)
+	
+	until file end(1)
+	close file 1
+endfunction
+remend 
+
+Function Scan_Line(New_Line$)
+		New_Line$ = New_Line$ + " "
+		if len(New_Line$) > 0
+			single$ = ""
+			for a = 1 to len(New_Line$)
+				
+				F_Mid$ = mid$(New_Line$, a)
+				
+				select F_Mid$
+					case " "
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+					endcase
+					case "	"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+					endcase
+					case "`"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						New_Line$ = ""
+					endcase
+					case ","
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line(",")
+					endcase
+					case "+"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("+")
+					endcase
+					case "-"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("-")
+					endcase
+					case "*"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("*")
+					endcase
+					case "/"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("/")
+					endcase
+					case "="
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("=")
+					endcase
+					case "<"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+					Add_Code_Line("<")
+					endcase
+					case ">"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line(">")
+					endcase
+					case "@"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("@")
+					endcase
+					case "("
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("(")
+					endcase
+					case ")"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line(")")
+					endcase
+					case "{"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+					endcase
+					case "}"
+						if single$ = "" = 0
+							Add_Code_Line(single$)
+							single$ = ""
+						endif
+						Add_Code_Line("endif")
+					endcase
+					case default
+						if F_Mid$ = chr$(34)
+							if single$ = "" = 0
+								Add_Code_Line(single$)
+								single$ = ""
+							endif
+							repeat
+								inc a
+								F_Mid$ = mid$(New_Line$, a)
+								if F_Mid$ = chr$(34) = 0
+									single$ = single$ + F_Mid$
+								endif
+							until F_Mid$ = chr$(34)
+							Add_String_Line(single$)
+							remstart
+							if single$ = ""
+								Force_Code_Line("")
+							endif
+							remend
+							single$ = ""
+						else
+							single$ = single$ + F_Mid$
+						endif
+					endcase
+				endselect
+
+			next a
+		endif
+endfunction
+ 
+ 
+ 
+ 
+`new code
+Function Add_Code_Line(New_Line$)
+	if Script_File_Lin(Code_Mode) < Script_File_Lin
+		inc Script_File_Lin(Code_Mode)
+	else
+		inc Script_File_Lin
+		dim Script_File$(Script_File_Lin, 3)
+		Script_File_Lin(Code_Mode) = Script_File_Lin
+	endif
+
+		New_Line$ = R_V_once(lower$(New_Line$))
+		
+		if left$(New_Line$, 1) = "$"
+			Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = "$"
+			if Script_File_Lin(Code_Mode) < Script_File_Lin
+				inc Script_File_Lin(Code_Mode)
+			else
+				inc Script_File_Lin
+				dim Script_File$(Script_File_Lin, 3)
+				Script_File_Lin(Code_Mode) = Script_File_Lin
+			endif
+			Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = right$(New_Line$,len(New_Line$)-1)
+		else
+			if New_Line$ = "-"
+				`if Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) = "," or Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) = "(" or Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) = "+" or Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) = "/" or Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) = "*"
+				if val(Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode)) = 0 and Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) <> "0" and Script_File$(Script_File_Lin(Code_Mode)-1, Code_Mode) <> ")"
+					Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = "0"
+					if Script_File_Lin(Code_Mode) < Script_File_Lin
+						inc Script_File_Lin(Code_Mode)
+					else
+						inc Script_File_Lin
+						dim Script_File$(Script_File_Lin, 3)
+						Script_File_Lin(Code_Mode) = Script_File_Lin
+					endif
+					Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+				else
+					Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+				endif
+			else
+				Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+			endif
+		endif
+
+endfunction
+
+Function Force_Code_Line(New_Line$)
+	if Script_File_Lin(Code_Mode) < Script_File_Lin
+		inc Script_File_Lin(Code_Mode)
+	else
+		inc Script_File_Lin
+		dim Script_File$(Script_File_Lin, 3)
+		Script_File_Lin(Code_Mode) = Script_File_Lin
+	endif
+	
+	Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+	
+endfunction
+
+`compiled code
+Function Add_Com_Code_Line(New_Line$)
+	if Script_File_Lin(Code_Mode) < Script_File_Lin
+		inc Script_File_Lin(Code_Mode)
+	else
+		inc Script_File_Lin
+		dim Script_File$(Script_File_Lin, 3)
+		Script_File_Lin(Code_Mode) = Script_File_Lin
+	endif
+	if Script_File$(Script_File_Lin(Code_Mode) - 1, Code_Mode) = "$"
+		Add_Variable(int(val(New_Line$)))
+		Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+	else
+		Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+	endif
+	`Add_Variable(Num as integer)
+	Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+endfunction
+
+Function Add_String_Line(New_Line$)
+	
+	if Script_File_Lin(Code_Mode) < Script_File_Lin
+		inc Script_File_Lin(Code_Mode)
+	else
+		inc Script_File_Lin
+		dim Script_File$(Script_File_Lin, 3)
+		Script_File_Lin(Code_Mode) = Script_File_Lin
+	endif
+	Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = chr$(34)
+	
+	if Script_File_Lin(Code_Mode) < Script_File_Lin
+		inc Script_File_Lin(Code_Mode)
+	else
+		inc Script_File_Lin
+		dim Script_File$(Script_File_Lin, 3)
+		Script_File_Lin(Code_Mode) = Script_File_Lin
+	endif
+	
+	Script_File$(Script_File_Lin(Code_Mode), Code_Mode) = New_Line$
+	
+endfunction
+
+
+
+
+` ******************* prerun/secondary compilation stuff *******************
+
+function compile_prerun()
+
+	`store script in temp array
+	dim temp_script$(Script_File_Lin)
+	for a = 1 to Script_File_Lin
+		temp_script$(a) = Script_File$(a, Code_Mode)
+	next a
+	
+	`function scan temp array
+	for a = 1 to Script_File_Lin(Code_Mode)
+		`run through all of the code
+		if temp_script$(a) = "function"
+			if temp_script$(a-1) <> chr$(34)
+				`we have found a function!
+				`add function to the ever growing list
+				inc a
+				add_function(temp_script$(a))
+				for b = a+1 to Script_File_Lin(Code_Mode)
+					if temp_script$(b) = ")"
+						`vars end
+						if temp_script$(b-1) <> chr$(34)
+							for c = b+1 to Script_File_Lin(Code_Mode)
+								if temp_script$(c) = "endfunction"
+									if temp_script$(c-1) <> chr$(34)
+										`function end
+										a = c
+										b = c
+										f_end = 1
+										exit
+									endif
+								else
+									`add line to function
+									add_function_line(temp_script$(c))
+								endif
+							next c
+						endif
+					else
+						if temp_script$(b) = "$"
+							`add line to function vars
+							inc b
+							add_function_var(temp_script$(b))
+						endif
+					endif
+					if f_end = 1
+						f_end = 0
+						exit
+					endif
+				next b
+				`collect function code
+			endif
+		endif
+	next a
+	
+	null = Script_File_Lin(Code_Mode)
+	
+	`empty real script array
+	for a = 1 to Script_File_Lin
+		Script_File$(a, Code_Mode) = ""
+	next a
+	Current_Line(Code_Mode) = 0
+	Script_File_Lin(Code_Mode) = 0
+	
+	`put code and functions into real array
+	for a = 1 to null
+		for b = 1 to fun_c
+			if temp_script$(a) = function_name(b)
+				if temp_script$(a-1) <> chr$(34)
+					if temp_script$(a+1) = "("
+						func_lin = 1
+						inc a, 2
+						Force_code_line("function")	
+						if function_vars_c(b) > 0
+							for c = 1 to function_vars_c(b)
+								Force_Code_Line("$")
+								Force_code_line(function_vars(b, c))
+								`message function_vars(b, c)
+								Force_code_line("=")
+								f_br_c = 1
+								do
+									if temp_script$(a) = ","
+										if f_br_c = 1
+											exit
+										endif
+									else
+										if temp_script$(a) = ")"
+											dec f_br_c
+											if f_br_c = 0
+												exit
+											endif
+										else
+											Force_code_line(temp_script$(a))
+											if temp_script$(a) = "("
+												inc f_br_c
+											endif
+										endif
+									endif
+									inc a
+								loop
+								inc a
+							next c
+							dec a
+						endif
+						if function_lines(b) > 0
+							for c = 1 to function_lines(b)
+								Force_code_line(function_code(b, c))
+							next c
+						endif
+						Force_code_line("endfunction")
+						`inc a
+						`Force_code_line(temp_script$(a))
+					endif
+				endif
+			else
+				if temp_script$(a) = "function"
+					if temp_script$(a-1) <> chr$(34)
+						repeat
+							inc a
+						until temp_script$(a) = "endfunction"
+						inc a
+					endif
+				else
+					`not a function
+					
+				endif
+				
+			endif
+		next b
+		if func_lin = 0
+			Force_code_line(temp_script$(a))
+		endif
+		func_lin = 0
+	next a
+	
+	`erase temp script holder
+	undim temp_script$(0)
+
+
+
+`REPEAT*********************************
+`store script in temp array
+repeat
+	function_count = 0
+	dim temp_script$(Script_File_Lin)
+	for a = 1 to Script_File_Lin
+		temp_script$(a) = Script_File$(a, Code_Mode)
+	next a
+	
+	null = Script_File_Lin(Code_Mode)
+	
+	`empty real script array
+	for a = 1 to Script_File_Lin
+		Script_File$(a, Code_Mode) = ""
+	next a
+	Current_Line(Code_Mode) = 0
+	Script_File_Lin(Code_Mode) = 0
+	
+	`put code and functions into real array
+	for a = 1 to null
+		for b = 1 to fun_c
+			if temp_script$(a) = function_name(b)
+				if temp_script$(a-1) <> chr$(34)
+					if temp_script$(a+1) = "("
+						func_lin = 1
+						inc a, 2
+						Force_code_line("function")	
+						inc function_count
+						if function_vars_c(b) > 0
+							for c = 1 to function_vars_c(b)
+								Force_Code_Line("$")
+								Force_code_line(function_vars(b, c))
+								`message function_vars(b, c)
+								Force_code_line("=")
+								f_br_c = 1
+								do
+									if temp_script$(a) = ","
+										exit
+									else
+										if temp_script$(a) = ")"
+											dec f_br_c
+											if f_br_c = 0
+												exit
+											endif
+										else
+											Force_code_line(temp_script$(a))
+											if temp_script$(a) = "("
+												inc f_br_c
+											endif
+										endif
+									endif
+									inc a
+								loop
+								inc a
+							next c
+							dec a
+						endif
+						if function_lines(b) > 0
+							for c = 1 to function_lines(b)
+								Force_code_line(function_code(b, c))
+							next c
+						endif
+						Force_code_line("endfunction")
+						`inc a
+						`Force_code_line(temp_script$(a))
+					endif
+				endif
+			else
+				
+				if temp_script$(a) = "function"
+					remstart
+					if temp_script$(a-1) <> chr$(34)
+						repeat
+							inc a
+						until temp_script$(a) = "endfunction"
+					endif
+					remend
+				else
+					`not a function
+					
+				endif
+				
+			endif
+		next b
+		if func_lin = 0
+			Force_code_line(temp_script$(a))
+		endif
+		func_lin = 0
+	next a
+	
+	`erase temp script holder
+	undim temp_script$(0)
+until function_count = 0
+
+endfunction
+
+
+function add_function(name as string)
+inc fun_c
+dim function_name(fun_c) as string
+dim function_lines(fun_c)
+dim function_code(fun_c, fun_l_c) as string
+
+dim function_vars_c(fun_c)
+dim function_vars(fun_c, fun_v_c) as string
+
+function_name(fun_c)  = name
+
+endfunction
+
+function add_function_line(lin as string)
+inc function_lines(fun_c)
+if function_lines(fun_c) > fun_l_c
+	inc fun_l_c
+	dim function_code(fun_c, fun_l_c) as string
+endif
+function_code(fun_c, function_lines(fun_c)) = lin
+endfunction
+
+Function add_function_var(lin as string)
+inc function_vars_c(fun_c)
+if function_vars_c(fun_c) > fun_v_c
+	inc fun_v_c
+	dim function_vars(fun_c, fun_v_c) as string
+endif
+function_vars(fun_c, function_vars_c(fun_c)) = lin
+endfunction
+
+
+`actual string functions
+
+Function Replace_With$(The_String$, The_Word$, The_New_Word$)
+	repeat
+		Var_Position = Find_Word(The_String$,The_Word$)
+		if Var_Position > 0
+			The_String$ = DeleteWord$(The_String$,The_Word$)
+			The_String$ = InsertWord$(The_String$,The_New_Word$,Var_Position)
+		endif
+	until Var_Position = 0
+endfunction The_String$
+
+Function Replace_one_With_once$(The_String$, The_Word$, The_New_Word$)
+	if CountChar(The_String$,The_Word$) > 0
+		Var_Position = Find_Word(The_String$,The_Word$)
+		if Var_Position > 0
+			The_String$ = DeleteWord$(The_String$,The_Word$)
+			The_String$ = InsertWord$(The_String$,The_New_Word$,Var_Position)
+		endif
+	endif
+endfunction The_String$
+
+Function Find_Word(String$,Word$)
+TMP=1
+FND=0
+Char$=Left$(Word$,1)
+
+SCAN:
+WHILE FND=0
+	IF MID$(String$,TMP)=Char$ THEN FND=1
+	IF TMP>LEN(String$) then TMP=0:FND=1
+	INC TMP,1
+ENDWHILE
+WLG=1
+SSEC=TMP
+MORE:
+
+if WLG>len(Word$)
+	exitfunction 0
+endif
+
+if SSEC>len(String$)+1
+	exitfunction 0
+endif
+
+if mid$(word$,WLG)=mid$(String$,SSEC-1)
+	if WLG=Len(Word$)
+		exitfunction TMP-1
+	endif
+endif
+
+if mid$(word$,WLG)=mid$(String$,SSEC-1)
+	inc WLG,1
+	inc SSEC,1
+	goto more:
+endif
+inc TMP,1
+goto SCAN:
+endfunction 0
+
+
+Function DeleteWord$(String$,Word$)
+TMP=Find_Word(String$,Word$)
+WLG=LEN(Word$)
+TMP2$=""
+if TMP=0
+	exitfunction String$
+endif
+TMP2$=Left$(String$,TMP-1)+Right$(String$,Len(String$)-(TMP+(WLG-1)))
+endfunction  TMP2$
+
+
+Function InsertWord$(String$,Word$,Here)
+TMP$=Left$(String$,Here-1)+Word$+Right$(String$,Len(String$)-(Here-1))
+endfunction TMP$
+
+
+Function CountChar(String$,Char$)
+COUNT=1:TALLY=0
+while count<Len(String$)+1
+if mid$(String$,Count)=Char$ then inc TALLY,1
+inc count,1
+endwhile
+endfunction tally
+
+
+Function CutParse(PickedWord,Splitter$,MsgToSplit$)
+	MsgLength=LEN(MsgToSplit$)
+	
+	for A = 1 to MsgLength
+		
+		Nxt$=mid$(MsgToSplit$,A)
+		
+		if Nxt$ = Splitter$
+				inc WordNumber
+			if WordNumber=PickedWord
+				Exit
+			else
+				Result$=""
+			Endif
+		else
+			Result$=Result$+Nxt$
+		endif
+		
+	next A
+
+	`Result$ = lower$(Result$)
+
+endfunction Result$
+
+
+function trim(a$)
+	while mid$(a$,1)=" ":a$=right$(a$,len(a$)-1):endwhile
+	while mid$(a$,len(a$))=" ":a$=left$(a$,len(a$)-1):endwhile
+endfunction a$
+
+function trim_quotes(a$)
+	while mid$(a$,1)=chr$(34):a$=right$(a$,len(a$)-1):endwhile
+	while mid$(a$,len(a$))=chr$(34):a$=left$(a$,len(a$)-1):endwhile
+endfunction a$
+
+function trim_tabs(a$)
+	while mid$(a$,1)="	":a$=right$(a$,len(a$)-1):endwhile
+	while mid$(a$,len(a$))="	":a$=left$(a$,len(a$)-1):endwhile
+endfunction a$
+
+
+Function CutLeft$(String$,Char$)
+TMP$=Left$(String$,VarInstr(String$,Char$)-1)
+endfunction TMP$
+
+Function CutRight$(String$,Char$)
+TMP$=Right$(String$,Len(String$)-VarInstr(String$,Char$))
+endfunction TMP$
+
+Function CutMiddle$(String$,LChar$,RChar$)
+TMP$=CutLeft$(String$,RChar$):TMP$=CutRight$(TMP$,LChar$)
+endfunction TMP$
+
+Function CutMiddleChars$(String$,LChar$,RChar$)
+TMP$=CutRight$(String$,LChar$)
+TMP$=CutLeft$(TMP$,RChar$)
+endfunction TMP$
+
+Function VarInstr(String$,Char$)
+TMP=1:FND=0
+WHILE FND=0:IF MID$(String$,TMP)=Char$ THEN FND=1
+IF TMP>LEN(String$) then TMP=0:FND=1
+INC TMP,1:ENDWHILE
+TMP = TMP-1
+endfunction TMP
+
+function left_is(str as string, str_is as string)
+	str = lower$(str)
+	if left$(str, len(str_is)) = str_is
+		exitfunction 1
+	endif
+endfunction 0

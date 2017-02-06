@@ -1,0 +1,263 @@
+`object
+
+function LoadObject(file_n as string)
+	for a = 1 to oo_c_obj_master_c
+		if file_n = oo_c_obj_master_f(a)
+			Numbre=FreeObject()
+			clone object Numbre, oo_c_obj_master_n(a)
+			position object Numbre, Default_X#, Default_Y#, Default_Z#
+			rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+			if Numbre > oo_top_object then oo_top_object = Numbre
+			add_scg_object(Numbre, cur_cnt)
+			exitfunction Numbre
+		endif
+	next a
+	
+	`if it gets to here then this is a new object
+	inc oo_c_obj_master_c
+	dim oo_c_obj_master_f(oo_c_obj_master_c)
+	dim oo_c_obj_master_n(oo_c_obj_master_c)
+	Numbre = LoadNewObject(file_n)
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	if Numbre>oo_top_object then oo_top_object=Numbre
+	add_scg_object(Numbre, cur_cnt)
+	oo_c_obj_master_f(oo_c_obj_master_c) = file_n
+	oo_c_obj_master_n(oo_c_obj_master_c) = Numbre
+endfunction Numbre
+
+function LoadCObject(file_n as string)
+	for a = 1 to oo_c_obj_master_c
+		if file_n = oo_c_obj_master_f(a)
+			Numbre=FreeObject()
+			clone object Numbre, oo_c_obj_master_n(a)
+			position object Numbre, Default_X#, Default_Y#, Default_Z#
+			rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+			add_scg_object(Numbre, cur_cnt)
+			sc_setupobject numbre, 0, 0
+			if Numbre > oo_top_object then oo_top_object = Numbre
+			exitfunction Numbre
+		endif
+	next a
+	
+	`if it gets to here then this is a new object
+	inc oo_c_obj_master_c
+	dim oo_c_obj_master_f(oo_c_obj_master_c)
+	dim oo_c_obj_master_n(oo_c_obj_master_c)
+	Numbre = LoadNewObject(file_n)
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	sc_setupobject numbre, 0, 0
+	if Numbre>oo_top_object then oo_top_object=Numbre
+	oo_c_obj_master_f(oo_c_obj_master_c) = file_n
+	oo_c_obj_master_n(oo_c_obj_master_c) = Numbre
+endfunction Numbre
+
+function LoadIObject(file_n as string)
+	for a = 1 to oo_c_obj_master_c
+		if file_n = oo_c_obj_master_f(a)
+			Numbre=FreeObject()
+			instance object Numbre, oo_c_obj_master_n(a)
+			position object Numbre, Default_X#, Default_Y#, Default_Z#
+			rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+			add_scg_object(Numbre, cur_cnt)
+			if Numbre > oo_top_object then oo_top_object = Numbre
+			exitfunction Numbre
+		endif
+	next a
+
+	`if it gets to here then this is a new object
+	inc oo_c_obj_master_c
+	dim oo_c_obj_master_f(oo_c_obj_master_c)
+	dim oo_c_obj_master_n(oo_c_obj_master_c)
+	Numbre = LoadNewObject(file_n)
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	if Numbre > oo_top_object then oo_top_object = Numbre
+	oo_c_obj_master_f(oo_c_obj_master_c) = file_n
+	oo_c_obj_master_n(oo_c_obj_master_c) = Numbre
+endfunction Numbre
+
+Function LoadNewObject(file_n as string)
+	Numbre=FreeObject()
+	load object file_n, Numbre
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	if Numbre > oo_top_object then oo_top_object = Numbre
+Endfunction Numbre
+
+Function MakeSphere(Size#)
+	Numbre=FreeObject()
+	make object sphere Numbre, Size#
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	if Numbre > oo_top_object then oo_top_object = Numbre
+Endfunction Numbre
+
+Function MakeCube(Size#)
+	Numbre=FreeObject()
+	make object cube Numbre, Size#
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	if Numbre > oo_top_object then oo_top_object = Numbre
+Endfunction Numbre
+
+Function MakeBox(Sizex#, Sizey#, Sizez#)
+	Numbre=FreeObject()
+	make object box Numbre, Sizex#, Sizey#, Sizez#
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	if Numbre > oo_top_object then oo_top_object = Numbre
+Endfunction Numbre
+
+Function MakePlain(Size#)
+	Numbre=FreeObject()
+	make object Plain Numbre, Size#, Size#
+	position object Numbre, Default_X#, Default_Y#, Default_Z#
+	rotate object Numbre, Default_Xa#, Default_Ya#, Default_Za#
+	add_scg_object(Numbre, cur_cnt)
+	if Numbre > oo_top_object then oo_top_object = Numbre
+Endfunction Numbre
+
+Function ObjectExist(Numbre)
+	i=0
+	if Numbre>0
+		if Object Exist(Numbre)
+			i=1
+		endif
+	endif
+endfunction i
+
+function DeleteObject(obj_n as integer)
+	for a = 1 to oo_c_obj_master_c
+		if obj_n = oo_c_obj_master_n(a)
+			`is a master object so lets keep it!
+			hide object obj_n
+			exitfunction
+		endif
+	next a
+`if it gets to here then this is not a master object
+delete object obj_n
+delete_scg_object(obj_n)
+oo_last_free_object = 0
+endfunction
+
+function FreeObject()
+	repeat
+		inc oo_last_free_object
+		if object exist(oo_last_free_object)=0 then found=1
+	until found
+endfunction oo_last_free_object
+
+`image
+
+Function LoadImage(Filey$)
+	Numbre=FreeImage()
+	load Image Filey$, Numbre
+Endfunction Numbre
+
+Function LoadImageA(Filey$)
+	Numbre=FreeImage()
+	load Image Filey$, Numbre, 1
+Endfunction Numbre
+
+function FreeImage()
+	repeat
+		inc i
+		if image exist(i)=0 then found=1
+	until found
+endfunction i
+
+Function ImageExist(Numbre)
+	i=0
+	if Numbre>0
+		if image exist(Numbre)
+			i=1
+		endif
+	endif
+endfunction i
+
+`sound
+
+Function LoadSound(Filey$)
+	Numbre=FreeSound()
+	load Sound Filey$, Numbre
+Endfunction Numbre
+
+function FreeSound()
+	repeat
+		inc i
+		if sound exist(i)=0 then found=1
+	until found
+endfunction i
+
+Function SoundExist(Numbre)
+	i=0
+	if Numbre>0
+		if sound exist(Numbre)
+			i=1
+		endif
+	endif
+endfunction i
+
+`music
+
+Function Loadmusic(Filey$)
+	Numbre=Freemusic()
+	load music Filey$, Numbre
+Endfunction Numbre
+
+function Freemusic()
+	repeat
+		inc i
+		if music exist(i)=0 then found=1
+	until found
+endfunction i
+
+Function musicExist(Numbre)
+	i=0
+	if Numbre>0
+		if music exist(Numbre)
+			i=1
+		endif
+	endif
+endfunction i
+
+
+`effect
+
+Function LoadEffect(Filey$)
+	Numbre=FreeEffect()
+	load effect Filey$, Numbre, 0
+Endfunction Numbre
+
+function FreeEffect()
+	repeat
+		inc i
+		if effect exist(i)=0 then found=1
+	until found
+endfunction i
+
+Function effectExist(Numbre)
+	i=0
+	if Numbre>0
+		if effect exist(Numbre)
+			i=1
+		endif
+	endif
+endfunction i
+
+`file
+
+function FreeFile()
+	repeat
+		inc i 
+		if file open(i)=0 then found=1
+	until found
+endfunction i

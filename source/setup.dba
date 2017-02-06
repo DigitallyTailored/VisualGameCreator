@@ -285,7 +285,7 @@ mwindow = createGadgetFromWindow(mainwindow())
 	addStatusPanel status_bar, 1024
 	
 `entity treeview
-	global tv_win : tv_win = createwindow(gadgetx(mwindow)+10, gadgety(mwindow)+80, 150, 300, "Entity selector", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
+	global tv_win : tv_win = createwindow(gadgetx(mwindow)-150, gadgety(mwindow)+240, 300, 600, "Entity selector", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
 	global tv_main : tv_main = createtreeview(0,0,150,screen height(), tv_win)
  	setgadgetalign tv_main, ALIGN_ALL
 	`search entities
@@ -295,7 +295,7 @@ mwindow = createGadgetFromWindow(mainwindow())
 
 `script editor
 //global scr_ed_w : scr_ed_w = createwindow(gadgetx(mwindow)+gadgetwidth(mwindow)-300, gadgety(mwindow)+gadgetheight(mwindow)-150, 295, 145, "Entity Editor", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
-global scr_ed_w : scr_ed_w = createwindow(gadgetx(mwindow)+600, gadgety(mwindow)+80, 200, 150, "Entity Editor", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
+global scr_ed_w : scr_ed_w = createwindow(gadgetx(mwindow)+1200, gadgety(mwindow)+240, 400, 400, "Entity Editor", WINDOW_NORMAL, WINDOW_TOOLWINDOW, 0, mwindow )
 
 global scr_ed : scr_ed = createrichedit(0,0,gadgetwidth(scr_ed_w), gadgetheight(scr_ed_w), scr_ed_w) : setgadgetalign scr_ed, ALIGN_ALL
 

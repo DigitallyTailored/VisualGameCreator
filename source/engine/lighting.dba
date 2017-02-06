@@ -1,0 +1,101 @@
+function add_light(colour as integer, range as float)
+	inc light_count
+	dim light_range(light_count) as float
+	dim light_colour(light_count)
+	dim light_position(light_count, 3) as float
+	
+	light_range(light_count) = range
+	light_colour(light_count) = colour
+	light_position(light_count, 1) = Default_X#
+	light_position(light_count, 2) = Default_Y#
+	light_position(light_count, 3) = Default_Z#
+endfunction light_count
+
+function delete_light(light as integer)
+	if light_count > 0
+		if light = light_count
+			repeat
+				dec light_count
+				dim light_range(light_count) as float
+				dim light_colour(light_count)
+				dim light_position(light_count, 3) as float
+			until light_range(light_count) > 0
+		else
+			light_range(light) = 0
+			light_colour(light) = 0
+			light_position(light, 1) = 0
+			light_position(light, 2) = 0
+			light_position(light, 3) = 0	
+		endif
+	endif
+endfunction
+
+Function Update_Active_Lights()
+	
+	if active_lights_count > 0
+		if light_count > 0
+			for a = 1 to light_count
+				if Light_Active(a) = 0
+					`run through all unactive lights and compare distance to that of camera
+					L_Dis# = Light_Cam_Distance(a)
+						
+						for b = 1 to active_lights_count
+					 		`run through active lights list comparing range data
+					 		A_L_Dis# = Light_Cam_Distance(active_lights(b))
+					 		if L_Dis# < A_L_Dis# or A_L_Dis# = 0
+					 			for c = active_lights_count to b step -1
+					 				if c < active_lights_count
+					 					active_lights(c) = active_lights(c-1)
+					 				endif
+					 			next c
+					 			active_lights(b) = a
+					 			`update lights
+					 			for l = 1 to active_lights_count
+					 				position light l, light_position(active_lights(l), 1), light_position(active_lights(l), 2), light_position(active_lights(l), 3)
+					 				color light l, light_colour(active_lights(l))
+					 				set light range l, light_range(active_lights(l))
+					 			next l
+					 			exit
+					 		endif
+						next b
+				endif
+			next a
+		endif
+	endif
+	
+	remstart
+	`debug
+	if active_lights_count > 0
+		for a = 1 to active_lights_count
+			if active_lights(a) > 0
+				text 10, 100+10*a, str$(active_lights(a))+ "/" + str$(Light_Cam_Distance(active_lights(a)))
+			endif
+		next a
+	endif
+	remend
+	
+endfunction
+
+
+function Light_Active(Light_no as integer)
+	F_Result = 0
+	if light_range(Light_no) = 0
+		
+	else
+		F_Result = 0
+		if active_lights_count > 0
+			for a = 1 to active_lights_count
+				if Light_No = active_lights(a)
+					F_Result = 1
+					exit
+				endif
+			next a
+		endif
+	endif
+endfunction F_Result
+
+
+function Light_Cam_Distance(Light_no as integer)
+	F_Result# =  Q_Distance(light_position(Light_no, 1), light_position(Light_no, 2), light_position(Light_no, 3), camera position x(), camera position y(), camera position z())
+endfunction F_Result#
+ 

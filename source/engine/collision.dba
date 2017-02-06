@@ -1,0 +1,257 @@
+Function CalculateCollision(Objnumbre)
+			RunYIntersections(Objnumbre)
+			RunXIntersections(Objnumbre)
+			RunZIntersections(Objnumbre)
+endfunction
+
+
+function RunXIntersections(Obj1)
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1)+Object size x(Obj1)/2,object position y(Obj1),object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1)-object size x(Obj1)/2+Distance#,Object position y(Obj1),Object position z(Obj1)
+			SC_UpdateObject Obj1
+		endif
+	endif
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1)-Object size x(Obj1)/2,object position y(Obj1),object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1)+object size x(Obj1)/2-Distance#,Object position y(Obj1),Object position z(Obj1)
+			SC_UpdateObject Obj1
+		endif
+	endif
+endfunction
+
+function RunYIntersections(Obj1)
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1)+Object size y(Obj1)/2,object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1)-object size y(Obj1)/2+Distance#,Object position z(Obj1)
+			SC_UpdateObject Obj1
+		endif
+	endif
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1)-Object size y(Obj1)/2,object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1)+object size y(Obj1)/2-Distance#,Object position z(Obj1)
+			SC_UpdateObject Obj1
+		endif
+	endif
+endfunction
+
+function RunZIntersections(Obj1)
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1),object position z(Obj1)+Object size z(Obj1)/2)
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1),Object position z(Obj1)-object size z(Obj1)/2+Distance#
+			SC_UpdateObject Obj1
+		endif
+	endif
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1),object position z(Obj1)-Object size z(Obj1)/2)
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1),Object position z(Obj1)+object size z(Obj1)/2-Distance#
+			SC_UpdateObject Obj1
+		endif
+	endif
+endfunction
+
+
+function ReturnXIntersections(Obj1)
+	distance# = 0
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1)+Object size x(Obj1)/2,object position y(Obj1),object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1)-object size x(Obj1)/2+Distance#,Object position y(Obj1),Object position z(Obj1)
+			SC_UpdateObject Obj1
+		endif
+	endif
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1)-Object size x(Obj1)/2,object position y(Obj1),object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1)-object size x(Obj1)/2+Distance#,Object position y(Obj1),Object position z(Obj1)
+			SC_UpdateObject Obj1
+			Distance# = Distance# - Distance#*2
+		endif
+	endif
+endfunction Distance#
+
+function ReturnYIntersections(Obj1)
+distance# = 0
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1)+Object size y(Obj1)/2,object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1)-object size y(Obj1)/2+Distance#,Object position z(Obj1)
+			SC_UpdateObject Obj1
+		endif
+	endif
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1)-Object size y(Obj1)/2,object position z(Obj1))
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1)+object size y(Obj1)/2-Distance#,Object position z(Obj1)
+			SC_UpdateObject Obj1
+			Distance# = Distance# - Distance#*2
+		endif
+	endif
+endfunction Distance#
+
+function ReturnZIntersections(Obj1)
+distance# = 0
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1),object position z(Obj1)+Object size z(Obj1)/2)
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1),Object position z(Obj1)-object size z(Obj1)/2+Distance#
+			SC_UpdateObject Obj1
+		endif
+	endif
+	if SC_intersectObject ( 0, object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1),object position z(Obj1)-Object size z(Obj1)/2)
+		distance# =  SC_getcollisiondistance()
+		if Distance# = 0 = 0
+		   position object Obj1,object position x(Obj1),Object position y(Obj1),Object position z(Obj1)+object size z(Obj1)/2-Distance#
+			SC_UpdateObject Obj1
+			Distance# = Distance# - Distance#*2
+		endif
+	endif
+endfunction Distance#
+
+
+Function Intersections(Obj1,Obj2)
+if BoxCollide(Obj1,Obj2)
+
+`set object cull Obj2,0
+SC_UpdateObject Obj2
+
+Distance#=Intersect_Object(Obj2,object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1)+Object size y(Obj1)/2,object position z(Obj1))
+if Distance# = 0 = 0
+   position object Obj1,object position x(Obj1),Object position y(Obj1)-object size y(Obj1)/2+Distance#,Object position z(Obj1)
+	SC_UpdateObject Obj1
+endif
+Distance#=Intersect_Object(Obj2,object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1)-Object size y(Obj1)/2,object position z(Obj1))
+if Distance# = 0 = 0
+    position object Obj1,object position x(Obj1),Object position y(Obj1)+object size y(Obj1)/2-Distance#,Object position z(Obj1)
+	SC_UpdateObject Obj1
+endif
+
+Distance#=Intersect_Object(Obj2,object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1)+Object size x(Obj1)/2,object position y(Obj1),object position z(Obj1))
+if Distance# = 0 = 0
+   position object Obj1,object position x(Obj1)-object size x(Obj1)/2+Distance#,Object position y(Obj1),Object position z(Obj1)
+	SC_UpdateObject Obj1
+endif
+Distance#=Intersect_Object(Obj2,object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1)-Object size x(Obj1)/2,object position y(Obj1),object position z(Obj1))
+if Distance# = 0 = 0
+    position object Obj1,object position x(Obj1)+object size x(Obj1)/2-Distance#,Object position y(Obj1),Object position z(Obj1)
+	SC_UpdateObject Obj1
+endif
+
+Distance#=Intersect_Object(Obj2,object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1),object position z(Obj1)+Object size z(Obj1)/2)
+if Distance# = 0 = 0
+   position object Obj1,object position x(Obj1),Object position y(Obj1),Object position z(Obj1)-object size z(Obj1)/2+Distance#
+	SC_UpdateObject Obj1
+endif
+Distance#=Intersect_Object(Obj2,object position x(Obj1),object position y(Obj1),object position z(Obj1),object position x(Obj1),object position y(Obj1),object position z(Obj1)-Object size z(Obj1)/2)
+if Distance# = 0 = 0
+    position object Obj1,object position x(Obj1),Object position y(Obj1),Object position z(Obj1)+object size z(Obj1)/2-Distance#
+	SC_UpdateObject Obj1
+endif
+
+`set object cull Obj2,1
+
+endif
+Endfunction
+
+
+
+
+
+function BoxCollide(o1,o2)
+F_R=0
+if object position x(o1)<object position x(o2)+object size x(o2)*2 and object position x(o1)>object position x(o2)-object size x(o2)*2
+if object position z(o1)<object position z(o2)+object size z(o2)*2 and object position z(o1)>object position z(o2)-object size z(o2)*2
+if object position y(o1)<object position y(o2)+object size y(o2)*2 and object position y(o1)>object position y(o2)-object size y(o2)*2
+F_R=1
+endif
+endif
+endif
+endfunction F_R
+
+
+function WithinRange(X1#, Y1#, Z1#, X2#, Y2#, Z2#, Range#)
+	result#=(X1#-X2#)^2+(Y1#-Y2#)^2+(Z1#-Z2#)^2
+   if result# < (Range#^2) then within=1
+endfunction within
+
+function Q_Distance(X1#, Y1#, Z1#, X2#, Y2#, Z2#)
+	result#=(X1#-X2#)^2+(Y1#-Y2#)^2+(Z1#-Z2#)^2
+endfunction result#
+
+Function ObjectWithinRange( Object, X2#, Y2#, Z2#, Range# )
+	result#=(Object Position X(Object)-X2#)^2+(Object Position Y(Object)-Y2#)^2+(Object Position Z(Object)-Z2#)^2
+   if result# < (Range#^2) then within=1
+endfunction within
+
+Function ObjectsWithinRange( Object_1, Object_2, Range# )
+	result#=(Object Position X(Object_1)-Object Position X(Object_2))^2+(Object Position Y(Object_1)-Object Position Y(Object_2))^2+(Object Position Z(Object_1)-Object Position Z(Object_2))^2
+   if result# < (Range#^2) then within=1
+endfunction within
+
+
+Function LineClear( X1#, Y1#, Z1#, X2#, Y2#, Z2# )
+	Clear = 1
+	if SC_intersectObject ( 0, X1#, Y1#, Z1#, X2#, Y2#, Z2#)
+		Clear = 0
+		exitfunction Clear
+	endif
+endfunction Clear
+
+Function ObjectLineClear( Object_1, X2#, Y2#, Z2# )
+	Clear = 1
+	if SC_intersectObject ( 0, object position x(Object_1), Object Position Y(Object_1), Object Position Z(Object_1), X2#, Y2#, Z2#)
+		Clear = 0
+		exitfunction Clear
+	endif
+endfunction Clear
+
+Function ObjectsLineClear( Object_1, Object_2 )
+	Clear = 0
+	null = SC_intersectObject ( 0, object position x(Object_1), Object Position Y(Object_1), Object Position Z(Object_1), Object Position X(Object_2), Object Position Y(Object_2), Object Position Z(Object_2))
+	if SC_getObjectHit() = Object_2
+		Clear = 1
+	endif
+	`if Object_2 = null
+	`	Clear = 1
+	`endif
+endfunction Clear
+
+Function LineBlocked( X1#, Y1#, Z1#, X2#, Y2#, Z2# )
+	distance# = 0
+	if SC_intersectObject ( 0, X1#, Y1#, Z1#, X2#, Y2#, Z2#)
+		distance# =  SC_getcollisiondistance()
+		exitfunction distance#
+	endif
+endfunction distance#
+
+Function ObjectLineBlocked( Object_1, X2#, Y2#, Z2# )
+	distance# = 0
+	if SC_intersectObject ( 0, object position x(Object_1), Object Position Y(Object_1), Object Position Z(Object_1), X2#, Y2#, Z2#)
+		distance# =  SC_getcollisiondistance()
+		exitfunction distance#
+	endif
+endfunction distance#
+
+Function ObjectsLineBlocked( Object_1, Object_2 )
+	distance# = 0
+	null = SC_intersectObject ( 0, object position x(Object_1), Object Position Y(Object_1), Object Position Z(Object_1), Object Position X(Object_2), Object Position Y(Object_2), Object Position Z(Object_2))
+	if Object_2 = null
+		distance# =  SC_getcollisiondistance()
+		exitfunction distance#
+	endif
+endfunction distance#
+
+
+function SphereSlidingCollision(Obj,X1#,Y1#,Z1#,Radius#)
+	C = sc_SphereSlide(0,X1#,Y1#,Z1#, object position x(Obj), object position y(Obj), object position z(Obj), Radius#, Obj)
+
+   if C > 0
+		POSITION OBJECT Obj, sc_getCollisionSlideX(), sc_getCollisionSlideY(), sc_getCollisionSlideZ()
+   endif
+endfunction

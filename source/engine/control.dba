@@ -1,0 +1,35 @@
+function MouseControl(Speed as float)
+	
+	if mouseclick()=2
+		
+		xrotate camera camera angle x() + mousemovey()
+		yrotate camera camera angle y() + mousemovex()
+		position mouse screen width()/2, screen height()/2
+
+		if upkey() or keystate(17)
+			move camera Speed
+		endif
+		if downkey() or keystate(31)
+			move camera -Speed
+		endif
+		if leftkey() or keystate(30)
+			x#=camera angle x()
+			z#=camera angle z()
+			rotate camera 0,camera angle y()-90,0
+			move camera Speed
+			rotate camera x#,camera angle y()+90,z#
+		endif
+		if rightkey() or keystate(32)
+			x#=camera angle x()
+			z#=camera angle z()
+			rotate camera 0,camera angle y()+90,0
+			move camera Speed
+			rotate camera x#,camera angle y()-90,z#
+		endif
+	
+	endif
+	
+	null=mousemovex()
+	null=mousemovey()
+	
+endfunction

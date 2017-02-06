@@ -1,6 +1,6 @@
 <iscript>
 $ground.object = loadobject("data\obj\nature\landscapes\ireland\terrain.dbo")
-`set object scale $ground.object, 500, 500, 500
+`set object scale $ground.object, 100, 100, 100
 position object $ground.object, -50000, -100, -50000
 set object collision $ground.object, 1
 </iscript>

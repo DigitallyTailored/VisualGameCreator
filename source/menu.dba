@@ -129,7 +129,10 @@ function runMenu()
 					
 					//copy over engine
 					setStatusText status_bar, 1, "Copying contents of system directory... 3/5"
+					//copy default run files
 					copy_dir(Main_Dir$+"\system", grab_dir(map_file$))
+					//copy latest compile engine
+					copy file Main_Dir$+"\source\engine\engine.exe", grab_dir(map_file$)+"\engine.exe"
 					
 					//copy main script if one is there
 					if file exist(Main_Dir$ + "\packs\current\main.script")

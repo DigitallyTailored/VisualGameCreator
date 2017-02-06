@@ -1,8 +1,0 @@
-
-function neverCallGamecryp38923789572()
-   make memblock 0,0
-   load image "null",0
-   load object "null",0
-   load sound "null",0
-   end
-endfunction
