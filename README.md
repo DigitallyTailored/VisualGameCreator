@@ -19,8 +19,8 @@ Below is a video created years ago showing an early version of VGC with it's rea
 
 VGC has been sitting on a backup drive for several years now and it seems a shame that an engine that I spent so much time on is being left.
 
-For me, the most important thing about VGC is that I want it to be free for everyone to use, with no license restrictions on projects or profits having to go my way. I really enjoy making games and just want to share the fun with everyone.
+It's quite obsolote now with the likes of Godot, Lumberyard and Unity.
 
-My website is devaug.com. You can contact me via email at luke@devaug.com or through my Twitter handle @Luke_Aaron
+My website is devanew.com. You can contact me via email at luke@devanew.com or through my Twitter handle @Luke_Aaron
 
 - Luke Aaron Heyburn
